@@ -1,0 +1,64 @@
+---
+title: "450k CN analysis - complete workflow"
+author: "Maximilian Knoll"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteEngine{knitr::rmarkdown}
+    \usepackage[utf8]{inputenc} 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##  Aim
+
+This is a short introduction into CN Analysis with the cnAnalysis450k 
+package. The aim is to identify segmental alterations for a given set 
+of samples. For a complete overview for several ways of analyzing and 
+the neccessary parameters refer to the "completeWorkflow" vignette.
+
+```{r}
+
+##Load data
+#Controls
+ctrlAll <-
+minfi:::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
+ctrlAll[is.infinite(ctrlAll)] <- NA
+ctrlAll <- scale(ctrlAll)
+ctrl <- apply(ctrlAll, 1, "median")
+#Samples
+samples <-
+minfi::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
+samples[is.infinite(samples)] <- NA
+samples <- scale(samples)
+
+
+##Process data
+candidatesDATA <-
+cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
+candidatesMATRIX <-
+cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.01)
+candidatesCUT <-
+cnAnalysis450k::findCutoffs(candidatesMATRIX, proximity = c(2, 1))
+candidatesFINAL <-
+cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, effectsize =
+c(0.15, 0.1))
+
+
+##Display
+anno_row <-
+data.frame(do.call(rbind, strsplit(rownames(candidatesFINAL), ":")))
+rownames(anno_row) <- rownames(candidatesFINAL)
+colnames(anno_row) <- c("Chromosome", "Startpos")
+anno_row$Chromosome <-
+factor(anno_row$Chromosome, levels = paste("chr", 1:22, sep = ""))
+pheatmap::pheatmap(candidatesFINAL,
+annotation_row = anno_row[, "Chromosome", drop = FALSE],
+cluster_rows = FALSE)
+```
+
