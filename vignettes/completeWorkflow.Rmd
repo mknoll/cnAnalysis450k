@@ -35,13 +35,6 @@ a z-transformation can be applied to each sample.
 
 ```{r}
 
-###### load data for mthe CopyNumber450kData package
-require(CopyNumber450kData)
-RGcontrolSetEx <- CopyNumber450kData::RGcontrolSetEx
-## what is  going on here?
-#no slot of name "colData" for this object of class "RGChannelSet"
-attributes(RGcontrolSetEx)$colData <- pData(RGcontrolSetEx)
-
 ## use z-transformation
 workflow <- "B" #B, A, C
 
@@ -50,20 +43,23 @@ switch(workflow,
 A = {
 #without z-transformation, e.g. illumina
 ctrlAll <-
-minfi::getCN(minfi::preprocessIllumina(RGcontrolSetEx[, 1:10]))
+minfi::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
 ctrl <- apply(ctrlAll, 1, "median")
 },
 B = {
 #with z-Transformation, illumina
 ctrlAll <-
-minfi:::getCN(minfi::preprocessIllumina(RGcontrolSetEx[, 1:10]))
+minfi:::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
 ctrlAll[is.infinite(ctrlAll)] <- NA
 ctrlAll <- scale(ctrlAll)
 ctrl <- apply(ctrlAll, 1, "median")
 },
 C = {
 #conumee-path, Illumina
-ctrl <- minfi::preprocessIllumina(RGcontrolSetEx[, 1:10])
+ctrl <- minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 1:10])
 })
 
 ## samples
@@ -71,18 +67,21 @@ switch(workflow,
 A = {
 #without z-transformation
 samples <-
-minfi::getCN(minfi::preprocessIllumina(RGcontrolSetEx[, 11:14]))
+minfi::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
 },
 B = {
 #with z-transformation
 samples <-
-minfi::getCN(minfi::preprocessIllumina(RGcontrolSetEx[, 11:14]))
+minfi::getCN(minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
 },
 C = {
 #conumee path, Illumina
-samples <- minfi::preprocessIllumina(RGcontrolSetEx[, 11:14])
+samples <- minfi::preprocessIllumina(
+    CopyNumber450kData::RGcontrolSetEx[, 11:14])
 },
 {
 stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")
