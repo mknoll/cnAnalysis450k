@@ -21,19 +21,27 @@ of samples. For a complete overview for several ways of analyzing and
 the neccessary parameters refer to the "completeWorkflow" vignette.
 
 ```{r}
-
 ##Load data
+object<- CopyNumber450kData::RGcontrolSetEx
+dataset <-  minfi::RGChannelSet(
+    Green=BiocGenerics::getObjectSlots(object)[["assayData"]][["Green"]],
+    Red=BiocGenerics::getObjectSlots(object)[["assayData"]][["Red"]],
+    colData = BiocGenerics::getObjectSlots(
+        BiocGenerics::getObjectSlots(object)[["phenoData"]])[["data"]],
+    annotation = BiocGenerics::getObjectSlots(object)[["annotation"]]
+)
+
 #Controls
 ctrlAll <-
 minfi:::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
+    dataset[, 1:10]))
 ctrlAll[is.infinite(ctrlAll)] <- NA
 ctrlAll <- scale(ctrlAll)
 ctrl <- apply(ctrlAll, 1, "median")
 #Samples
 samples <-
 minfi::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
+    dataset[, 11:14]))
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
 

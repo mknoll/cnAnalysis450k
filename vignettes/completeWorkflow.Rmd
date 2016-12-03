@@ -44,7 +44,6 @@ dataset <-  minfi::RGChannelSet(
     annotation = BiocGenerics::getObjectSlots(object)[["annotation"]]
 )
 
-
 ## use z-transformation
 workflow <- "B" #B, A, C
 
