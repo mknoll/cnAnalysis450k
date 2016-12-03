@@ -38,6 +38,9 @@ a z-transformation can be applied to each sample.
 ###### load data for mthe CopyNumber450kData package
 require(CopyNumber450kData)
 RGcontrolSetEx <- CopyNumber450kData::RGcontrolSetEx
+## what is  going on here?
+#no slot of name "colData" for this object of class "RGChannelSet"
+attributes(RGcontrolSetEx)$colData <- pData(RGcontrolSetEx)
 
 ## use z-transformation
 workflow <- "B" #B, A, C
