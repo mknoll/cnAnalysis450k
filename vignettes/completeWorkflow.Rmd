@@ -35,9 +35,14 @@ a z-transformation can be applied to each sample.
 
 ```{r}
 ## Data from normal tissue
-dataset <- CopyNumber450kData::RGcontrolSetEx
-slot(dataset, "colData", check=FALSE) <- colnames(Biobase::pData(dataset))
-slot(dataset, "rowData", check=FALSE) <- rownames(Biobase::pData(dataset))
+object<- CopyNumber450kData::RGcontrolSetEx
+dataset <-  minfi::RGChannelSet(
+    Green=BiocGenerics::getObjectSlots(object)[["assayData"]][["Green"]],
+    Red=BiocGenerics::getObjectSlots(object)[["assayData"]][["Red"]],
+    colData = BiocGenerics::getObjectSlots(getObjectSlots(object)[["phenoData"]])[["data"]],
+    annotation = BiocGenerics::getObjectSlots(object)[["annotation"]]
+)
+
 
 ## use z-transformation
 workflow <- "B" #B, A, C
