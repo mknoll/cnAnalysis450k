@@ -34,6 +34,10 @@ As baseline CP values differ quite largely event in control samples,
 a z-transformation can be applied to each sample. 
 
 ```{r}
+## Data from normal tissue
+dataset <- CopyNumber450kData::RGcontrolSetEx
+slot(dataset, "colData", check=FALSE) <- colnames(Biobase::pData(dataset))
+slot(dataset, "rowData", check=FALSE) <- rownames(Biobase::pData(dataset))
 
 ## use z-transformation
 workflow <- "B" #B, A, C
@@ -44,14 +48,14 @@ A = {
 #without z-transformation, e.g. illumina
 ctrlAll <-
 minfi::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
+    dataset[, 1:10]))
 ctrl <- apply(ctrlAll, 1, "median")
 },
 B = {
 #with z-Transformation, illumina
 ctrlAll <-
 minfi:::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 1:10]))
+    dataset[, 1:10]))
 ctrlAll[is.infinite(ctrlAll)] <- NA
 ctrlAll <- scale(ctrlAll)
 ctrl <- apply(ctrlAll, 1, "median")
@@ -59,7 +63,7 @@ ctrl <- apply(ctrlAll, 1, "median")
 C = {
 #conumee-path, Illumina
 ctrl <- minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 1:10])
+    dataset[, 1:10])
 })
 
 ## samples
@@ -68,20 +72,20 @@ A = {
 #without z-transformation
 samples <-
 minfi::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
+    dataset[, 11:14]))
 },
 B = {
 #with z-transformation
 samples <-
 minfi::getCN(minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 11:14]))
+    dataset[, 11:14]))
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
 },
 C = {
 #conumee path, Illumina
 samples <- minfi::preprocessIllumina(
-    CopyNumber450kData::RGcontrolSetEx[, 11:14])
+    dataset[, 11:14])
 },
 {
 stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")
