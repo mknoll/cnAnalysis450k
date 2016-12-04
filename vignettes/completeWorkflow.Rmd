@@ -34,6 +34,9 @@ As baseline CP values differ quite largely event in control samples,
 a z-transformation can be applied to each sample. 
 
 ```{r}
+## pdflatex not found on oaxaca/Mac OS X
+Sys.setenv(PATH=paste(Sys.getenv("PATH"),"/usr/texbin",sep=":"))
+
 ## Data from normal tissue
 object<- CopyNumber450kData::RGcontrolSetEx
 dataset <-  minfi::RGChannelSet(
