@@ -16,37 +16,74 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Overview
 
 This is a CN analysis workflow which shows different possible ways of 
-normalizing / anlyzing Illumina 450k Methylation data.
+normalizing / anlyzing Illumina 450k methylation data.
 
-## Data loading
+## Data loading 
 
-Read the idat files of interest with the minfi package. The resulting 
-MethylSets can then be used directly for the conumee-analysis path. 
-Alternatively, idat files can be normalized with minfi previous to 
-extraction of CopyNumber data with minfis getCN() function.
-
-* preprocessFunnorm()
-* preprocessIllumina()
-* preprocessRaw()
-
-Funnorm normalization is not usable when using the conumee-pathway. 
-As baseline CP values differ quite largely event in control samples, 
-a z-transformation can be applied to each sample. 
+Idat files can be loaded with read.methyarray() of minfi. This gives
+an RGChannelSet. 
 
 ```{r}
-## pdflatex not found on oaxaca/Mac OS X
-Sys.setenv(PATH=paste(Sys.getenv("PATH"),"/usr/texbin",sep=":"))
+## Use minfiData example dataset
+dataset <- minfiData::RGsetEx
+```
 
-## Data from normal tissue
-object<- CopyNumber450kData::RGcontrolSetEx
-dataset <-  minfi::RGChannelSet(
-    Green=BiocGenerics::getObjectSlots(object)[["assayData"]][["Green"]],
-    Red=BiocGenerics::getObjectSlots(object)[["assayData"]][["Red"]],
-    colData = BiocGenerics::getObjectSlots(
-        BiocGenerics::getObjectSlots(object)[["phenoData"]])[["data"]],
-    annotation = BiocGenerics::getObjectSlots(object)[["annotation"]]
-)
+## Normalization & Transformation
 
+All normalization methods which yield an CN array, can be used in 
+the described workflow. E.g. the BMIQ normalization, which uses 
+and provides only beta values, cannot be used to normalize copy 
+numbers and therefore is not applicable for the provided workflow.
+
+### Minfi normalization methods
+
+The resulting RGChannelSet can then be normalized, e.g. using methods 
+from the minfi package:
+
+* preprocessRaw()
+* preprocessIllumina()
+* preprocessFunnorm()
+* preprocessQuantile()
+* preprocessSwan()
+* preprocessNoob()
+
+Different normalization methods return different datasets:
+
+MethylSet 
+* preprocessRaw() 
+* preprocessIllumina()
+* preprocessSWAN()
+
+GenomicRatioSet 
+* preprocessFunnorm()
+* preprocessQuantile()
+
+Both data structures contain CN assays, which can be retrieved
+with the getCN() method from the minfi package. 
+
+With the conumee workflow (C), only MethylSets can be processed.
+
+### Dasen normalization 
+
+For more complex normalization strategies, e.g. dasen,
+RGMethylSets are normalized with preprocessRaw() prior
+to further calculations (wateRmelon, y_minfi.R). Alternatively, 
+any normalized MethylSet can be further processed by the dasen
+method.
+
+### Z-transformation
+
+An additional z-transformation is advisable for two reasons:
+
+a) Removal of baseline-differences between samples (especially
+in funnorm / noob / raw / swan and partly in illumina normalized
+data)
+
+b) Direct comparison of different normalization methods 
+using the same absolute cutoffs for gains / losses.
+
+
+```{r}
 ## use z-transformation
 workflow <- "B" #B, A, C
 
@@ -100,11 +137,11 @@ stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")
 })
 ```
 
+
 ## Finding segments/bins/transcripts/genes in CN data
 
 When using the conumee path, one can calculate segments / bins 
 and additionally transcript / gene specific CN alterations. 
-
 
 ```{r}
 #What information is of interest?

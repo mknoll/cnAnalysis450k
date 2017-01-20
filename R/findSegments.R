@@ -16,6 +16,8 @@
 #' @param ylim if plot=T give ylim
 #' @param delta area around changepoints to plot for plot=T
 #' @param output "ratio" (Sample/Ctrl) or "diff" (Sample-Ctrl)
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically determine 
+#' the array type (450k, EPIC)
 #'
 #' @return data containing chr, startCG, endCG, segmentmedian, -mean, 
 #' SD and samplename
@@ -25,7 +27,18 @@
 #' @export
 #'
 #' @examples
-#' print("Please refer to the 'completeWorkflow' vignette!")
+#' data <- data.frame(
+#' smp1=c(-8.12, -5.225, -3.24, -3.61),
+#' smp2=c(-5.0, -3.98, -4.06, -4.5),
+#' smp3=c(NA, -2.48, -2.27, -2.1)
+#' )
+#' ctrlAll <- data.frame(
+#' ctl1=c(1.0, -3.6, 0.7, -0.73),
+#' ctl2=c(-0.4, -4.1, -4.2, -3.9),
+#' ctl2=c(0.74, -1.12, -2.8, -1.67)
+#' )
+#' ctrl <- apply(ctrlAll, 1, "median")
+#' findSegments(data,ctrlAll,ctrl)
 findSegments <-
     function(data,
             ctrl,
@@ -34,10 +47,16 @@ findSegments <-
             plot = FALSE,
             delta = 500,
             output = "diff",
-            ylim = NULL) {
+            ylim = NULL,
+            arrayType="auto") {
         print("### Find Segments in CN Data ...")
-        # Get annotation
-        anno <- minfi::getAnnotation(CopyNumber450kData::RGcontrolSetEx)
+        
+        ##get annotation
+        if (arrayType=="auto") {
+          anno <- getAnnoData(determineArrayType(data))
+        } else {
+          anno <- getAnnoData(arrayType)
+        }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
         
         # Get cg Borders of Chromosomes

@@ -10,12 +10,19 @@
 #' @param bin Aggregate Fishers p.values to < 0.001, <0.01, 
 #' <0.05, <0.1, >0.1
 #'
-#' @return vector with all p values
+#' @return vector with all p-values
 #'
 #' @export
 #'
 #' @examples
-#' print("Please refer to the 'completeWorkflow' vignette!")
+#' data <- data.frame(smp1=c(0,1,1,-1,0),
+#' smp2=c(0,1,0,1,1),
+#' smp3=c(1,1,0,0,0))
+#' rownames(data) <- c("chr1:10000", "chr1:50000", 
+#' "chr1:100000", "chr1:150000", "chr1:200000")
+#' group <- c(1,2,2)
+#' calcFisher(data,group,FALSE)
+#' calcFisher(data,group,TRUE)
 calcFisher <- function(data, cluster, bin = TRUE) {
     fVal <-
         apply(data, 1, function(x) {

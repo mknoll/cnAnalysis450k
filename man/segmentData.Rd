@@ -9,7 +9,7 @@ segmentData(data, cutoffs, effectsize = c(0, 0))
 \arguments{
 \item{data}{inputdata}
 
-\item{cutoffs}{cutoffs, calculted e.g. with \code{findCutoffs()}}
+\item{cutoffs}{cutoffs, calculated e.g. with \code{findCutoffs()}}
 
 \item{effectsize}{minimal required effectsize as vector (loss, gain)}
 }
@@ -20,6 +20,26 @@ binarized values
 Binarizes Data (-1, 0, +1) according to given cutoff list
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+candMatrix <- data.frame(
+smp1=c(-0.097, -1.208,-0.134, 1.732),
+smp2=c(-0.006, 0.004, 0.004, -0.001),
+smp3=c(0.050, 0.008, 0.008,0.046 ))
+rownames(candMatrix) <- c(
+"chr1:15865", "chr1:110230252",
+"chr1:110254692", "chr3:45838226"
+)
+cutoffs <- data.frame(
+rn=c(
+"chr1:15865", "chr1:110230252",
+"chr1:110254692", "chr3:45838226"
+),
+i=c(1,2,3,1),
+cutoffLoss=c(-0.85,NA,NA,-0.05),
+cutoffGain=c(NA,NA,NA,NA),
+cutoffLossWP=c(-0.80, -0.83, -0.83, NA), 
+cutoffGainWP=c(NA,NA,NA,NA),
+baseline=c(0.01,0.01,0.01,0.01)
+)
+segmentsData(candMatrix, cutoffs)
 }
 

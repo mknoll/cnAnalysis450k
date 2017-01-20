@@ -5,7 +5,7 @@
 \title{Get TX CNV values}
 \usage{
 getTxValues(data, ctrl, ctrlAll, tx, output = "diff",
-    statistic = "wilcoxon", op = "median")
+  statistic = "wilcoxon", op = "median", arrayType = "auto")
 }
 \arguments{
 \item{data}{input data}
@@ -22,6 +22,9 @@ getTxValues(data, ctrl, ctrlAll, tx, output = "diff",
 vs smp); "t.test" or "wilcoxon" (Mann-Whitney-U Test)}
 
 \item{op}{median or mean}
+
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically determine 
+the array type (450k, EPIC)}
 }
 \value{
 list with tx-names, p-values and used statistical test
@@ -30,6 +33,23 @@ list with tx-names, p-values and used statistical test
 Calculates CN values for given list of transcripts.
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+#' data <- data.frame(
+smp1=c(-8.12, -5.225, -3.24, -3.61, -3.46),
+smp2=c(-5.0, -3.98, -4.06, -4.5, -3.7),
+smp3=c(NA, -2.48, -2.27, -2.1)
+)
+ctrlAll <- data.frame(
+ctl1=c(1.0, -3.6, 0.7, -0.73),
+ctl2=c(-0.4, -4.1, -4.2, -3.9),
+ctl2=c(0.74, -1.12, -2.8, -1.67)
+)
+rownames(data) <- c(
+"cg05132306", "cg15527168",
+"cg17434257", "cg17592667"
+)
+rownames(ctrlAll) <- rownames(data)
+ctrl <- apply(ctrlAll, 1, "median")
+names(ctrl) <- rownames(data)
+getTxValues(data, ctrl, ctrlAll, "uc001aih.1")
 }
 

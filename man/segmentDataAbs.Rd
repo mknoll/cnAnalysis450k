@@ -24,6 +24,14 @@ matrix, containing -1,0,+1 for losses / gains
 Use absolute cutoffs to create CNV gain / loss matrix.
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+candMatrix <- data.frame(
+smp1=c(-0.097, -1.208,-0.134, 1.732),
+smp2=c(-0.006, 0.004, 0.004, -0.001),
+smp3=c(0.050, 0.008, 0.008,0.046 ))
+rownames(candMatrix) <- c(
+"chr1:15865", "chr1:110230252",
+"chr1:110254692", "chr3:45838226"
+)
+segmentDataAbs(candMatrix, upper=0.1, lower=-0.15)
 }
 

@@ -5,7 +5,7 @@
 \title{Find Segments in the provided CN data}
 \usage{
 findSegments(data, ctrl, ctrlAll, statistic = "wilcoxon", plot = FALSE,
-    delta = 500, output = "diff", ylim = NULL)
+  delta = 500, output = "diff", ylim = NULL, arrayType = "auto")
 }
 \arguments{
 \item{data}{CN data to evaluate}
@@ -25,6 +25,9 @@ over all ctrl samples)}
 \item{output}{"ratio" (Sample/Ctrl) or "diff" (Sample-Ctrl)}
 
 \item{ylim}{if plot=T give ylim}
+
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically determine 
+the array type (450k, EPIC)}
 }
 \value{
 data containing chr, startCG, endCG, segmentmedian, -mean, 
@@ -37,6 +40,17 @@ Segments are identified with changepoints cpr.var()
 function (BinSeg)
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+data <- data.frame(
+smp1=c(-8.12, -5.225, -3.24, -3.61),
+smp2=c(-5.0, -3.98, -4.06, -4.5),
+smp3=c(NA, -2.48, -2.27, -2.1)
+)
+ctrlAll <- data.frame(
+ctl1=c(1.0, -3.6, 0.7, -0.73),
+ctl2=c(-0.4, -4.1, -4.2, -3.9),
+ctl2=c(0.74, -1.12, -2.8, -1.67)
+)
+ctrl <- apply(ctrlAll, 1, "median")
+findSegments(data,ctrlAll,ctrl)
 }
 

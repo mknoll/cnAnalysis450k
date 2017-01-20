@@ -7,17 +7,34 @@
 #' @param data input data
 #' @param p.select 0.05 selection of candidates which have a p.value
 #' < p.select for at least 1 sample
-#'
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically determine 
+#' the array type (450k, EPIC)
+#' 
 #' @return all aligned segments
 #'
 #' @export
 #'
 #' @examples
-#' print("Please refer to the 'completeWorkflow' vignette!")
-createSegmentMatrix <- function(data, p.select = 0.05) {
+#' data <- data.frame(
+#' chr=rep("chr1", 4),
+#' startCG=c("cg13869341","cg08651003", "cg26542962", "cg11680055"),
+#' endCG=c("cg01729401", "cg00373247", "cg20944548", "cg25520068"),
+#' median=c(-0.09, -0.11, -0.16, -1.21),
+#' mean=c(-0.09, -0.12, -0.17, -1.75),
+#' sd=c(0.13, 0.17, 0.2, 2.1),
+#' smp=rep("5723646053_R04C02", 4),
+#' p.val=rep(0.00006, 4)
+#' )
+#' createSegmentMatrix(data)
+createSegmentMatrix <- function(data, p.select = 0.05, arrayType="auto") {
     print("### Create Segment Matrix ...")
     
-    anno <- minfi::getAnnotation(CopyNumber450kData::RGcontrolSetEx)
+    ##get annotation
+    if (arrayType=="auto") {
+      anno <- getAnnoData(determineArrayType(data))
+    } else {
+      anno <- getAnnoData(arrayType)
+    }
     annoSorted <- anno[order(anno$chr, anno$pos),]
     
     ##add position
@@ -91,5 +108,5 @@ createSegmentMatrix <- function(data, p.select = 0.05) {
         pos$SELECT[i] <- any(sub$p.val <= p.select)
     }
     
-    return(allSegments[which(pos$SELECT == TRUE),])
+    return(allSegments[which(pos$SELECT == TRUE),,drop=F])
 }

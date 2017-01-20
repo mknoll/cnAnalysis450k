@@ -1,7 +1,7 @@
 Package: cnAnalysis450k
 Type: Package
 Title: Copy Number Analysis for 450k Illumina Methylation Arrays
-Version: 0.99.2
+Version: 0.99.3
 Date: 2016-12-03
 Author: Maximilian Knoll
 Maintainer: Maximilian Knoll <m.knoll@dkfz.de>
@@ -12,7 +12,6 @@ Imports:  AnnotationDbi,
     BiocGenerics,
     changepoint,
     conumee,
-    CopyNumber450kData,
     fastmatch,
     foreach,
     doParallel,
@@ -23,12 +22,15 @@ Imports:  AnnotationDbi,
     Homo.sapiens,
     IRanges,
     minfi,
+    minfiData,
+    minfiDataEPIC,
     org.Hs.eg.db,
     pheatmap,
     plyr,
     S4Vectors,
     stats,
-    TxDb.Hsapiens.UCSC.hg19.knownGene
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    wateRmelon
 Suggests: knitr,
     rmarkdown,
     testthat

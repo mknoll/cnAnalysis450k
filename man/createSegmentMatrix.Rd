@@ -4,13 +4,16 @@
 \alias{createSegmentMatrix}
 \title{Create Segment-Matrix}
 \usage{
-createSegmentMatrix(data, p.select = 0.05)
+createSegmentMatrix(data, p.select = 0.05, arrayType = "auto")
 }
 \arguments{
 \item{data}{input data}
 
 \item{p.select}{0.05 selection of candidates which have a p.value
 < p.select for at least 1 sample}
+
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically determine 
+the array type (450k, EPIC)}
 }
 \value{
 all aligned segments
@@ -19,6 +22,16 @@ all aligned segments
 Create Segment Matrix from Segment-list (created with \code{findSegments()})
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+data <- data.frame(
+chr=rep("chr1", 4),
+startCG=c("cg13869341","cg08651003", "cg26542962", "cg11680055"),
+endCG=c("cg01729401", "cg00373247", "cg20944548", "cg25520068"),
+median=c(-0.09, -0.11, -0.16, -1.21),
+mean=c(-0.09, -0.12, -0.17, -1.75),
+sd=c(0.13, 0.17, 0.2, 2.1),
+smp=rep("5723646053_R04C02", 4),
+p.val=rep(0.00006, 4)
+)
+createSegmentMatrix(data)
 }
 

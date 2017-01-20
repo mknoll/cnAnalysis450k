@@ -15,13 +15,20 @@ calcFisher(data, cluster, bin = TRUE)
 <0.05, <0.1, >0.1}
 }
 \value{
-vector with all p values
+vector with all p-values
 }
 \description{
 Calculates p values (Fishers exact test) for gain/loss 
 and given group assignment
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+data <- data.frame(smp1=c(0,1,1,-1,0),
+smp2=c(0,1,0,1,1),
+smp3=c(1,1,0,0,0))
+rownames(data) <- c("chr1:10000", "chr1:50000", 
+"chr1:100000", "chr1:150000", "chr1:200000")
+group <- c(1,2,2)
+calcFisher(data,group,FALSE)
+calcFisher(data,group,TRUE)
 }
 
