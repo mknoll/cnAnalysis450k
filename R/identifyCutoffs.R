@@ -30,7 +30,7 @@
 #' "chr1:15865", "chr1:110230252",
 #' "chr1:110254692", "chr3:45838226"
 #' )
-#' findCutoffs(candMatrix)
+#' findCutoffs(candMatrix, proximity=c(1,0))
 findCutoffs <-
     function(data,
             zeichne = FALSE,
@@ -82,6 +82,7 @@ findCutoffs <-
 #' @import plyr
 #' @import graphics
 #' @import stats
+#' @import utils
 #'
 #' @return identified cutoffs
 findCutoffsRun <-
@@ -95,7 +96,10 @@ findCutoffsRun <-
         total <- length(subD[, 1])
         for (i in 1:total) {
             ## progress
-            if (i %% 10 == 0) { flush.console(); cat("\r",round(i/total*100,2),"%   ") }
+            if (i %% 10 == 0) { 
+                utils::flush.console(); 
+                cat("\r",round(i/total*100,2),"%   ") 
+            }
             
             ##Determine borders for i
             iBak <- i
@@ -351,8 +355,6 @@ findCutoffsRun <-
 #' @param data Inputdata
 #' @param ignoreNAs F / T: if NAs occure, proceed, otherwise fail
 #' @param eps difference between x points (internal calculation)
-#' @param proximity how many previous / following rows should be 
-#' considered for cutoff determination? c(prev, folw)
 #'
 #' @import plyr
 #' @import stats
@@ -362,48 +364,49 @@ findCutoffsRun <-
 #'
 #' @return identified cutoffs
 findCutoffsRunFast <-
-  function(data, ignoreNAs, eps) {
-    warning("Might be unstable!")
-    no_cores <- parallel::detectCores() - 1
-    no_cores <- ifelse(no_cores == 0, 1, no_cores)
-    doParallel::registerDoParallel(no_cores)
-    
-    print("### Find Cutoffs (+/-) ... ")
-    ##Enable parallelization
-    proximity=c(0,0)
-    
-    subD <- data.matrix(data)
-    
-    #find differing groups: row wise
-    out <- foreach::foreach(i=1:length(subD[,1])) %dopar% {
-      epsilon <- eps
-      cont <- TRUE
-      if (any(is.na(subD[i, ]))) {
-        tmpNA <- subD[i, ]
-        warning(paste(
-          rownames(subD)[i],
-          ", debug(i:",
-          i,
-          "); ",
-          length(tmpNA[is.na(tmpNA)]),
-          " NAs found!"
-        ))
-        #Enough points to proceed?
-        if (length(subD[i, ]) - length(tmpNA[is.na(tmpNA)]) <= 2) {
-          warning(
-            paste(
-              "Only 2 datapoints for",
-              rownames(subD)[i],
-              " (debug: i=",
-              i,
-              ") -> skipping!"
-            )
-          )
-          cont <- FALSE
+    function(data, ignoreNAs, eps) {
+        warning("Might be unstable!")
+        no_cores <- parallel::detectCores() - 1
+        no_cores <- ifelse(no_cores == 0, 1, no_cores)
+        doParallel::registerDoParallel(no_cores)
+        
+        print("### Find Cutoffs (+/-) ... ")
+        ##Enable parallelization
+        proximity=c(0,0)
+        
+        subD <- data.matrix(data)
+        
+        #find differing groups: row wise
+        i<-0
+        out <- foreach::foreach(i=1:length(subD[,1])) %dopar% {
+            epsilon <- eps
+            cont <- TRUE
+            if (any(is.na(subD[i, ]))) {
+                tmpNA <- subD[i, ]
+                warning(paste(
+                    rownames(subD)[i],
+                    ", debug(i:",
+                    i,
+                    "); ",
+                    length(tmpNA[is.na(tmpNA)]),
+                    " NAs detected!"
+                ))
+                #Enough points to proceed?
+                if (length(subD[i, ]) - length(tmpNA[is.na(tmpNA)]) <= 2) {
+                    warning(
+                    paste(
+                    "Only 2 datapoints for",
+                    rownames(subD)[i],
+                    " (debug: i=",
+                    i,
+                    ") -> skipping!"
+                )
+                )
+            cont <- FALSE
         }
-      }
-      
-      if (cont) {
+    }
+
+    if (cont) {
         minV <- min(subD[i, ], na.rm = TRUE) - epsilon
         maxV <- max(subD[i, ], na.rm = TRUE) + epsilon
         ##fit function
@@ -420,21 +423,21 @@ findCutoffsRunFast <-
         ## Minima
         posD1Min <- c()
         for (j in 2:length(d1)) {
-          pos <- which(d1[j - 1] < 0 & d1[j] > 0)
-          if (length(pos) == 1) {
-            posD1Min <- c(posD1Min, j)
-          }
+            pos <- which(d1[j - 1] < 0 & d1[j] > 0)
+            if (length(pos) == 1) {
+                posD1Min <- c(posD1Min, j)
+            }
         }
         minV <- data.frame(key = xVal[posD1Min], 
-                           val = df(xVal[posD1Min]))
+                            val = df(xVal[posD1Min]))
         
         ## Maxima
         posD1Max <- c()
         for (j in 2:length(d1)) {
-          pos <- which(d1[j - 1] > 0 & d1[j] < 0)
-          if (length(pos) == 1) {
-            posD1Max <- c(posD1Max, j)
-          }
+            pos <- which(d1[j - 1] > 0 & d1[j] < 0)
+            if (length(pos) == 1) {
+                posD1Max <- c(posD1Max, j)
+            }
         }
         #order maxima
         maxV <- data.frame(key = xVal[posD1Max], val = df(xVal[posD1Max]))
@@ -445,68 +448,68 @@ findCutoffsRunFast <-
         wendepunkte <- c()
         d2 <- diff(df(xVal))
         for (k in 2:(length(d2) - 1)) {
-          if (!(is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1]))) {
-            if (d2[k - 1] < d2[k] &&
-                  d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
-                  d2[k + 1] > d2[k])  {
-              wendepunkte <- c(wendepunkte, k)
+            if (!(is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1]))) {
+                if (d2[k - 1] < d2[k] &&
+                    d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
+                    d2[k + 1] > d2[k])  {
+                    wendepunkte <- c(wendepunkte, k)
+                }
             }
-          }
         }
         
         ###########################
         ##potentielle cutoffs: drei wendepunkte zwischen zwei 
         #extremalstellen od extremalstelle u rand
         wp <-
-          data.frame(key = xVal[wendepunkte], 
-                     val = df(xVal[wendepunkte]))
+            data.frame(key = xVal[wendepunkte], 
+                    val = df(xVal[wendepunkte]))
         #rechts
         assumedSepGainWP <- NA
         extrR <- rbind(minV[which(minV$key > maxV$key[1]), ])
         if (dim(extrR)[[1]] == 0) {
-          ##rechts kein weiteres extremum -> randwert
-          wpTmp <- wp[which(wp$key > maxV$key[1]), ]
-          wpTmp <- wpTmp[order(wpTmp$key), ]
-          if (length(wpTmp[, 1]) >= 3) {
-            assumedSepGainWP <- mean(wpTmp[2:3, "key"])
-            if (length(assumedSepGainWP) > 1) {
-              assumedSepGainWP <- mean(assumedSepGainWP)
+            ##rechts kein weiteres extremum -> randwert
+            wpTmp <- wp[which(wp$key > maxV$key[1]), ]
+            wpTmp <- wpTmp[order(wpTmp$key), ]
+            if (length(wpTmp[, 1]) >= 3) {
+                assumedSepGainWP <- mean(wpTmp[2:3, "key"])
+                if (length(assumedSepGainWP) > 1) {
+                    assumedSepGainWP <- mean(assumedSepGainWP)
+                }
             }
-          }
         } else {
-          ## rechts weiteres extremum; sind vorher 3 wp vorhanden?
-          wpTmp <-
-            wp[which(wp$key > maxV$key[1] & wp$key < extrR$key[1]), ]
-          if (length(wpTmp[, 1]) >= 3) {
-            assumedSepGainWP <-  mean(wpTmp[2:3, "key"])
-            if (length(assumedSepGainWP) > 1) {
-              assumedSepGainWP <- mean(assumedSepGainWP)
+            ## rechts weiteres extremum; sind vorher 3 wp vorhanden?
+            wpTmp <-
+                wp[which(wp$key > maxV$key[1] & wp$key < extrR$key[1]), ]
+            if (length(wpTmp[, 1]) >= 3) {
+                assumedSepGainWP <-  mean(wpTmp[2:3, "key"])
+                if (length(assumedSepGainWP) > 1) {
+                    assumedSepGainWP <- mean(assumedSepGainWP)
+                }
             }
-          }
         }
         #links
         assumedSepLossWP <- NA
         extrL <- rbind(minV[which(minV$key < maxV$key[1]), ])
         if (dim(extrL)[[1]] == 0) {
-          ##links kein weiteres extremum -> randwert
-          wpTmp <- wp[which(wp$key < maxV$key[1]), ]
-          wpTmp <- wpTmp[order(wpTmp$key), ]
-          if (length(wpTmp[, 1]) >= 3) {
-            assumedSepLossWP <-  mean(wpTmp[2:3, "key"])
-            if (length(assumedSepLossWP) > 1) {
-              assumedSepLossWP <- mean(assumedSepLossWP)
+            ##links kein weiteres extremum -> randwert
+            wpTmp <- wp[which(wp$key < maxV$key[1]), ]
+            wpTmp <- wpTmp[order(wpTmp$key), ]
+            if (length(wpTmp[, 1]) >= 3) {
+                assumedSepLossWP <-  mean(wpTmp[2:3, "key"])
+                if (length(assumedSepLossWP) > 1) {
+                    assumedSepLossWP <- mean(assumedSepLossWP)
+                }
             }
-          }
         } else {
-          ## links weiteres extremum; sind vorher 3 wp vorhanden?
-          wpTmp <-
-            wp[which(wp$key < maxV$key[1] & wp$key > extrL$key[1]), ]
-          if (length(wpTmp[, 1]) >= 3) {
-            assumedSepLossWP <- mean(wpTmp[2:3, "key"])
-            if (length(assumedSepLossWP) > 1) {
-              assumedSepLossWP <- mean(assumedSepLossWP)
+            ## links weiteres extremum; sind vorher 3 wp vorhanden?
+            wpTmp <-
+                wp[which(wp$key < maxV$key[1] & wp$key > extrL$key[1]), ]
+            if (length(wpTmp[, 1]) >= 3) {
+                assumedSepLossWP <- mean(wpTmp[2:3, "key"])
+                if (length(assumedSepLossWP) > 1) {
+                    assumedSepLossWP <- mean(assumedSepLossWP)
+                }
             }
-          }
         }
         
         
@@ -515,15 +518,15 @@ findCutoffsRunFast <-
         maxVLoss <- maxV[which(maxV$key <= maxV$key[1]), ]
         #find separating value for first and second max
         minCand <-
-          minV[which(minV$key <= maxVLoss$key[1] &
-                       minV$key >= maxVLoss$key[2]), ]
+            minV[which(minV$key <= maxVLoss$key[1] &
+                        minV$key >= maxVLoss$key[2]), ]
         assumedSepLoss <- NA
         if (dim(minCand)[[1]] > 0) {
-          assumedSepLoss <-
-            minCand[which(minCand$val == min(minCand$val)), "key"]
-          if (length(assumedSepLoss) > 1) {
-            assumedSepLoss <- mean(assumedSepLoss)
-          }
+            assumedSepLoss <-
+                minCand[which(minCand$val == min(minCand$val)), "key"]
+            if (length(assumedSepLoss) > 1) {
+                assumedSepLoss <- mean(assumedSepLoss)
+            }
         }
         
         
@@ -531,37 +534,37 @@ findCutoffsRunFast <-
         maxVGain <- maxV[which(maxV$key >= maxV$key[1]), ]
         #find separating value for first and second max
         minCand <-
-          minV[which(minV$key >= maxVGain$key[1] &
-                       minV$key <= maxVGain$key[2]), ]
+            minV[which(minV$key >= maxVGain$key[1] &
+                        minV$key <= maxVGain$key[2]), ]
         assumedSepGain <- NA
         if (dim(minCand)[[1]] > 0) {
-          assumedSepGain <-
-            minCand[which(minCand$val == min(minCand$val)), "key"]
-          if (length(assumedSepGain) > 1) {
-            assumedSepGain <- mean(assumedSepGain)
-          }
+            assumedSepGain <-
+                minCand[which(minCand$val == min(minCand$val)), "key"]
+            if (length(assumedSepGain) > 1) {
+                assumedSepGain <- mean(assumedSepGain)
+            }
         }
         
         ##assemble data
         vec <- data.frame(
-          rn = rownames(subD)[i],
-          i = i,
-          cutoffLoss = assumedSepLoss,
-          cutoffGain = assumedSepGain,
-          cutoffLossWP = assumedSepLossWP,
-          cutoffGainWP = assumedSepGainWP,
-          baseline = assumedBaseline
+            rn = rownames(subD)[i],
+            i = i,
+            cutoffLoss = assumedSepLoss,
+            cutoffGain = assumedSepGain,
+            cutoffLossWP = assumedSepLossWP,
+            cutoffGainWP = assumedSepGainWP,
+            baseline = assumedBaseline
         )
-        
+
         vec
-      }
+        }
     }
-    
+
     ret <- do.call(rbind, out)
     ret <- data.frame(ret)
     ret <- ret[order(ret$i),]
-    
+
     doParallel::stopImplicitCluster()
-    
+
     return(ret)
-  }
+}

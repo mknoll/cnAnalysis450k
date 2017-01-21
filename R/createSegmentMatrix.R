@@ -7,8 +7,8 @@
 #' @param data input data
 #' @param p.select 0.05 selection of candidates which have a p.value
 #' < p.select for at least 1 sample
-#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically determine 
-#' the array type (450k, EPIC)
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
 #' 
 #' @return all aligned segments
 #'
@@ -31,9 +31,9 @@ createSegmentMatrix <- function(data, p.select = 0.05, arrayType="auto") {
     
     ##get annotation
     if (arrayType=="auto") {
-      anno <- getAnnoData(determineArrayType(data))
+        anno <- getAnnoData(determineArrayType(data))
     } else {
-      anno <- getAnnoData(arrayType)
+        anno <- getAnnoData(arrayType)
     }
     annoSorted <- anno[order(anno$chr, anno$pos),]
     
@@ -108,5 +108,5 @@ createSegmentMatrix <- function(data, p.select = 0.05, arrayType="auto") {
         pos$SELECT[i] <- any(sub$p.val <= p.select)
     }
     
-    return(allSegments[which(pos$SELECT == TRUE),,drop=F])
+    return(allSegments[which(pos$SELECT == TRUE),,drop=FALSE])
 }

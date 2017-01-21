@@ -14,11 +14,15 @@
 #'
 #' @import conumee
 #' @import plyr
+#' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #'
 #' @export
 #' 
 #' @examples 
-#' print("Please refer to the 'completeWorkflow' vignette!")
+#' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' data <- minfi::preprocessRaw(minfiData::RGsetEx[,1:2])
+#' ctrl <- minfi::preprocessRaw(minfiData::RGsetEx[,3:4])
+#' runConumee(data,ctrl,"segments")
 runConumee <- function(data,
                         ctrl,
                         what = "segments",
@@ -34,18 +38,21 @@ runConumee <- function(data,
     }
     
     ## check if all datasets belong to the same array type
-    if (cnAnalysis450k::determineArrayType(data) != cnAnalysis450k::determineArrayType(ctrl)) {
-      warning(paste("Provided data probably not from the same array: ", 
+    if (cnAnalysis450k::determineArrayType(data) != 
+        cnAnalysis450k::determineArrayType(ctrl)) {
+        warning(paste("Provided data probably not from the same array: ", 
                     cnAnalysis450k::determineArrayType(data),
                     cnAnalysis450k::determineArrayType(ctrl)))
     }
     
     if (what == "segments" | what == "bins") {
-        anno.cnv <- CNV.create_anno(array_type=cnAnalysis450k::determineArrayType(data))
+        anno.cnv <- CNV.create_anno(
+            array_type=cnAnalysis450k::determineArrayType(data))
     } else if (what == "transcripts") {
         #build GRanges object with transcripts
-        anno.cnv <- CNV.create_anno(array_type=cnAnalysis450k::determineArrayType(data),
-                                    detail_regions = createGRangesObj(tx))
+        anno.cnv <- CNV.create_anno(
+                        array_type=cnAnalysis450k::determineArrayType(data),
+                        detail_regions = createGRangesObj(tx))
     }
     
     data.cnv <- CNV.load(data)
@@ -56,8 +63,8 @@ runConumee <- function(data,
     for (i in 1:length(names(data.cnv))) {
         print(paste("Run conumee analysis for ", names(data.cnv)[i], "..."))
         x <- CNV.fit(query=data.cnv[i], 
-                     ref=ctrl.cnv[1:length(colnames(ctrl.cnv@intensity))], 
-                     anno.cnv)
+                    ref=ctrl.cnv[1:length(colnames(ctrl.cnv@intensity))], 
+                    anno.cnv)
         x <- CNV.bin(x)
         
         if (what == "segments") {

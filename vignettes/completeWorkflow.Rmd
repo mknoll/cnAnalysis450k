@@ -93,14 +93,14 @@ A = {
 #without z-transformation, e.g. illumina
 ctrlAll <-
 minfi::getCN(minfi::preprocessIllumina(
-    dataset[, 1:10]))
+    dataset[, 1:3]))
 ctrl <- apply(ctrlAll, 1, "median")
 },
 B = {
 #with z-Transformation, illumina
 ctrlAll <-
 minfi:::getCN(minfi::preprocessIllumina(
-    dataset[, 1:10]))
+    dataset[, 1:3]))
 ctrlAll[is.infinite(ctrlAll)] <- NA
 ctrlAll <- scale(ctrlAll)
 ctrl <- apply(ctrlAll, 1, "median")
@@ -108,7 +108,7 @@ ctrl <- apply(ctrlAll, 1, "median")
 C = {
 #conumee-path, Illumina
 ctrl <- minfi::preprocessIllumina(
-    dataset[, 1:10])
+    dataset[, 1:3])
 })
 
 ## samples
@@ -117,20 +117,20 @@ A = {
 #without z-transformation
 samples <-
 minfi::getCN(minfi::preprocessIllumina(
-    dataset[, 11:14]))
+    dataset[, 4:6]))
 },
 B = {
 #with z-transformation
 samples <-
 minfi::getCN(minfi::preprocessIllumina(
-    dataset[, 11:14]))
+    dataset[, 4:6]))
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
 },
 C = {
 #conumee path, Illumina
 samples <- minfi::preprocessIllumina(
-    dataset[, 11:14])
+    dataset[, 4:6])
 },
 {
 stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")

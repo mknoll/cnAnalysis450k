@@ -40,6 +40,6 @@ cutoffLossWP=c(-0.80, -0.83, -0.83, NA),
 cutoffGainWP=c(NA,NA,NA,NA),
 baseline=c(0.01,0.01,0.01,0.01)
 )
-segmentsData(candMatrix, cutoffs)
+segmentData(candMatrix, cutoffs)
 }
 

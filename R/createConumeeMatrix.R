@@ -11,11 +11,16 @@
 #' m equals the amount of samples
 #'
 #' @import plyr
+#' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #'
 #' @export
 #' 
 #' @examples 
-#' print("Please refer to the 'completeWorkflow' vignette!")
+#' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' samples <- minfi::preprocessRaw(minfiData::RGsetEx[,1:2])
+#' ctrl <- minfi::preprocessRaw(minfiData::RGsetEx[,3:4])
+#' candidatesDATA <- runConumee(samples,ctrl,"segments")
+#' createConumeeMatrix(candidatesDATA)[1:3,]
 createConumeeMatrix <- function(data) {
     #sanity check
     if (data$what == "segments") {

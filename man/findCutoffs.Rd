@@ -5,7 +5,7 @@
 \title{Finding cutoffs}
 \usage{
 findCutoffs(data, zeichne = FALSE, ignoreNAs = FALSE, eps = 0.01,
-  proximity = c(0, 0))
+    proximity = c(0, 0))
 }
 \arguments{
 \item{data}{Inputdata}
@@ -36,6 +36,6 @@ rownames(candMatrix) <- c(
 "chr1:15865", "chr1:110230252",
 "chr1:110254692", "chr3:45838226"
 )
-findCutoffs(candMatrix)
+findCutoffs(candMatrix, proximity=c(1,0))
 }
 

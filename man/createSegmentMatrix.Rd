@@ -12,8 +12,8 @@ createSegmentMatrix(data, p.select = 0.05, arrayType = "auto")
 \item{p.select}{0.05 selection of candidates which have a p.value
 < p.select for at least 1 sample}
 
-\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically determine 
-the array type (450k, EPIC)}
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically 
+determine the array type (450k, EPIC)}
 }
 \value{
 all aligned segments

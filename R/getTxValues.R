@@ -12,17 +12,17 @@
 #' vs smp); "t.test" or "wilcoxon" (Mann-Whitney-U Test)
 #' @param tx vector of list of transcripts#'
 #' @param output "ratio" (Sample/Ctrl) or "diff" (Sample-Ctrl)
-#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically determine 
-#' the array type (450k, EPIC)
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
 #' 
 #' @return list with tx-names, p-values and used statistical test
 #' 
 #' @export
 #' 
 #' @examples
-#' #' data <- data.frame(
-#' smp1=c(-8.12, -5.225, -3.24, -3.61, -3.46),
-#' smp2=c(-5.0, -3.98, -4.06, -4.5, -3.7),
+#' data <- data.frame(
+#' smp1=c(-8.12, -5.225, -3.24, -3.62),
+#' smp2=c(-5.0, -3.98, -4.06, -4.5),
 #' smp3=c(NA, -2.48, -2.27, -2.1)
 #' )
 #' ctrlAll <- data.frame(
@@ -37,7 +37,7 @@
 #' rownames(ctrlAll) <- rownames(data)
 #' ctrl <- apply(ctrlAll, 1, "median")
 #' names(ctrl) <- rownames(data)
-#' getTxValues(data, ctrl, ctrlAll, "uc001aih.1")
+#' getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 getTxValues <-
     function(data,
             ctrl,
@@ -51,9 +51,9 @@ getTxValues <-
         
         ##get annotation
         if (arrayType=="auto") {
-          anno <- getAnnoData(determineArrayType(data))
+            anno <- getAnnoData(determineArrayType(data))
         } else {
-          anno <- getAnnoData(arrayType)
+            anno <- getAnnoData(arrayType)
         }
         
         # Get Tx position
@@ -101,10 +101,11 @@ getTxValues <-
             ##statistics
             if (statistic == "t.test") {
                 #standard t-test
-                p.val <- c(p.val, t.test(da, ctAll)$p.value)
+                p.val <- c(p.val, t.test(unlist(da), unlist(ctAll))$p.value)
             } else if (statistic == "wilcoxon") {
                 #mann-whitney-wilcoxon test
-                p.val <- c(p.val, wilcox.test(da, ctAll)$p.value)
+                p.val <- c(p.val, 
+                    wilcox.test(unlist(da), unlist(ctAll))$p.value)
             } else {
                 stop("Unknown statistic!")
             }
@@ -135,7 +136,9 @@ getTxValues <-
 #' @param data input data
 #' @param ctrl control data
 #' @param ctrlAll CN data of all control samples
-#' @param tx vector of list of transcripts#'
+#' @param tx vector of list of transcripts
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
 #'
 #' @return list with tx-names, p-values and used statistical test
 #'
@@ -146,7 +149,7 @@ getTxValues <-
 #' @export
 #'
 #' @examples
-#' #' data <- data.frame(
+#' data <- data.frame(
 #' smp1=c(-8.12, -5.225, -3.24, -3.61),
 #' smp2=c(-5.0, -3.98, -4.06, -4.5),
 #' smp3=c(NA, -2.48, -2.27, -2.1)
@@ -163,8 +166,8 @@ getTxValues <-
 #' rownames(ctrlAll) <- rownames(data)
 #' ctrl <- apply(ctrlAll, 1, "median")
 #' names(ctrl) <- rownames(data)
-#' getTxValues(data, ctrl, ctrlAll, "uc001aih.1")
-getTxValuesFast <- function(data, ctrl, ctrlAll, tx) {
+#' getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
+getTxValuesFast <- function(data, ctrl, ctrlAll, tx, arrayType="auto") {
     warning("Might be unstable!")
     no_cores <- parallel::detectCores() - 1
     no_cores <- ifelse(no_cores == 0, 1, no_cores)
@@ -172,9 +175,9 @@ getTxValuesFast <- function(data, ctrl, ctrlAll, tx) {
     
     ##get annotation
     if (arrayType=="auto") {
-      anno <- getAnnoData(determineArrayType(data))
+        anno <- getAnnoData(determineArrayType(data))
     } else {
-      anno <- getAnnoData(arrayType)
+        anno <- getAnnoData(arrayType)
     }
     
     # Get Tx position
@@ -219,7 +222,7 @@ getTxValuesFast <- function(data, ctrl, ctrlAll, tx) {
             }
             
             ##statistics
-            p.val <- wilcox.test(da, ctAll)$p.value
+            p.val <- wilcox.test(unlist(da), unlist(ctAll))$p.value
             
             list(data = vec,
                 pVal = p.val,

@@ -9,6 +9,8 @@ require(plyr)
 #' @param cutoffs cutoffs, calculated e.g. with \code{findCutoffs()}
 #' @param effectsize minimal required effectsize as vector (loss, gain)
 #'
+#' @import utils 
+#'
 #' @export
 #'
 #' @return binarized values
@@ -34,20 +36,24 @@ require(plyr)
 #' cutoffGainWP=c(NA,NA,NA,NA),
 #' baseline=c(0.01,0.01,0.01,0.01)
 #' )
-#' segmentsData(candMatrix, cutoffs)
+#' segmentData(candMatrix, cutoffs)
 segmentData <- function(data, cutoffs, effectsize = c(0, 0)) {
     print("Binarize data ... ")
     completeDATA <- data
     signCluster <- cutoffs
     
     candDataLG <-
-        completeDATA[which(rownames(completeDATA) %in% signCluster$rn), ,drop=F]
+        completeDATA[
+            which(rownames(completeDATA) %in% signCluster$rn), ,drop=FALSE]
     gainsLosses <- NULL
     
     total <- length(candDataLG[, 1])
     for (i in 1:total) {
         ## progress
-        if (i %% 10 == 0) { flush.console(); cat("\r",round(i/total*100,2),"%  ") }
+        if (i %% 10 == 0) { 
+            utils::flush.console() 
+            cat("\r",round(i/total*100,2),"%  ") 
+        }
         
         ## gains / losses
         cutG <-

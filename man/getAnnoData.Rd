@@ -13,4 +13,10 @@ getAnnoData(type)
 annotation object, retrieved via getAnnotation()
 for the respective array design
 }
+\description{
+Returns the getAnnotation() object for 450k or EPIC data
+}
+\examples{
+getAnnoData("EPIC")[1:3,]
+}
 

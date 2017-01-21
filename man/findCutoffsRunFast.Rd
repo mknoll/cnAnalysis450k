@@ -12,9 +12,6 @@ findCutoffsRunFast(data, ignoreNAs, eps)
 \item{ignoreNAs}{F / T: if NAs occure, proceed, otherwise fail}
 
 \item{eps}{difference between x points (internal calculation)}
-
-\item{proximity}{how many previous / following rows should be 
-considered for cutoff determination? c(prev, folw)}
 }
 \value{
 identified cutoffs

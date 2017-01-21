@@ -11,26 +11,25 @@
 #' vs smp); "t.test" or "wilcoxon" (Mann-Whitney-U Test)
 #' @param binsize binsize
 #' @param output "ratio" (Sample/Ctrl) or "diff" (Sample-Ctrl)
-#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically determine 
-#' the array type (450k, EPIC)
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
+#' @param noCores number of cores for parallelization: needed 
+#' to pass the cran examples :/ 
 #' 
 #' @return bins with their corresponding value
+#'
+#' @import foreach
+#' @import doParallel
+#' @import parallel
 #'
 #' @export
 #'
 #' @examples
-#' data <- data.frame(
-#' smp1=c(-8.12, -5.225, -3.24, -3.61),
-#' smp2=c(-5.0, -3.98, -4.06, -4.5),
-#' smp3=c(NA, -2.48, -2.27, -2.1)
-#' )
-#' ctrlAll <- data.frame(
-#' ctl1=c(1.0, -3.6, 0.7, -0.73),
-#' ctl2=c(-0.4, -4.1, -4.2, -3.9),
-#' ctl2=c(0.74, -1.12, -2.8, -1.67)
-#' )
-#' ctrl <- apply(ctrlAll, 1, "median")
-#' createBins(data,ctrlAll, ctrl, 50000)
+#' data <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
+#' ctrlAll <- data[,4:6]
+#' ctrl <- data[,5]
+#' data <- data[,1:3]
+#' createBins(data,ctrl,ctrlAll, binsize=5000000, noCores=1)[1:3,]
 createBins <-
     function(data,
             ctrl,
@@ -38,14 +37,24 @@ createBins <-
             statistic = "wilcoxon",
             binsize = 200000,
             output = "diff",
-            arrayType="auto") {
+            arrayType="auto",
+            noCores=-1) {
+        warning("Might be unstable!")
+        if (noCores == -1) {
+            no_cores <- parallel::detectCores() - 1
+            no_cores <- ifelse(no_cores == 0, 1, no_cores)
+        } else {
+            no_cores <- noCores
+        }
+        doParallel::registerDoParallel(no_cores)
+
         print(paste("### Bin CN Data: binsize=", binsize, " ..."))
         
         ##get annotation
         if (arrayType=="auto") {
-          anno <- getAnnoData(determineArrayType(data))
+            anno <- getAnnoData(determineArrayType(data))
         } else {
-          anno <- getAnnoData(arrayType)
+            anno <- getAnnoData(arrayType)
         }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
         
@@ -73,16 +82,18 @@ createBins <-
             ct <- ctrl
             ct <- ct[fastmatch::fmatch(rownames(annoSorted), names(ct))]
             ctAll <- ctrlAll
-            ctAll <- ctAll[match(rownames(annoSorted), rownames(ctAll)), ]
+            ctAll <- ctAll[fastmatch::fmatch(rownames(annoSorted), 
+                rownames(ctAll)), ,drop=FALSE]
             da <- data[, j]
+            names(da) <- rownames(data)
             da <- da[fastmatch::fmatch(rownames(annoSorted), names(da))]
             smpName <- colnames(data)[j]
             cat("\n")
             print(paste("Processing", smpName, "..."))
             
-            sampleBins <- NULL
             ##splitpos
-            for (ch in levels(factor(chBorder$chr))) {
+            sampleBins <- 
+                foreach::foreach(ch=levels(factor(chBorder$chr))) %dopar% {
                 cat("\n#", ch, " ")
                 subCh <-
                     data.frame(anno[which(anno$chr == ch), c("pos", "chr")])
@@ -154,14 +165,14 @@ createBins <-
                     if (statistic == "t.test") {
                         #standard t-test
                         p.val <-
-                            c(p.val, t.test(daTmp[starts[p]:ends[p]],
-                                ctAllTmp[starts[p]:ends[p]])$p.value)
+                            c(p.val, t.test(daTmp,
+                                ctAllTmp)$p.value)
                     } else if (statistic == "wilcoxon") {
                         #mann-whitney-wilcoxon test
                         p.val <-
                             c(p.val,
-                                wilcox.test(daTmp[starts[p]:ends[p]], 
-                                ctAllTmp[starts[p]:ends[p]])$p.value)
+                                wilcox.test(daTmp, 
+                                ctAllTmp)$p.value)
                     } else {
                         stop("Unknown statistic!")
                     }
@@ -180,10 +191,11 @@ createBins <-
                     p.val = p.val,
                     statistic = statistic
                 )
-                sampleBins <- rbind.fill(sampleBins, chrDF)
             }
-            patData <- rbind.fill(patData, sampleBins)
+            patData <- rbind(patData, do.call(rbind, sampleBins))
         }
-        
+
+        stopImplicitCluster()
+
         return(patData)
     }

@@ -1,35 +1,33 @@
 Package: cnAnalysis450k
 Type: Package
 Title: Copy Number Analysis for 450k Illumina Methylation Arrays
-Version: 0.99.3
-Date: 2016-12-03
+Version: 0.99.4
+Date: 2017-01-21
 Author: Maximilian Knoll
 Maintainer: Maximilian Knoll <m.knoll@dkfz.de>
-Description: Segmentation and aggregation of (normalized) 450k Illumina methylation copy number data.
+Description: Normalization, segmentation and aggregation of Illumina methylation array copy number data (450k + EPIC).
 License: GPL-3
 RoxygenNote: 5.0.1
 Imports:  AnnotationDbi,
-    BiocGenerics,
     changepoint,
     conumee,
     fastmatch,
     foreach,
     doParallel,
     parallel,
-    GenomicFeatures,
     GenomicRanges,
     graphics,
-    Homo.sapiens,
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
     IRanges,
+    limma,
     minfi,
     minfiData,
     minfiDataEPIC,
-    org.Hs.eg.db,
-    pheatmap,
     plyr,
     S4Vectors,
     stats,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
+    utils,
     wateRmelon
 Suggests: knitr,
     rmarkdown,
@@ -37,4 +35,6 @@ Suggests: knitr,
 VignetteBuilder: knitr
 biocViews: Software,
     AssayDomain,
-    CopyNumberVariation
+    CopyNumberVariation,
+    MethylationArray,
+    Normalization

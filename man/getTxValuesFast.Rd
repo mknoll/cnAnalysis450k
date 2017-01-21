@@ -4,7 +4,7 @@
 \alias{getTxValuesFast}
 \title{Get TX CNV values}
 \usage{
-getTxValuesFast(data, ctrl, ctrlAll, tx)
+getTxValuesFast(data, ctrl, ctrlAll, tx, arrayType = "auto")
 }
 \arguments{
 \item{data}{input data}
@@ -13,7 +13,10 @@ getTxValuesFast(data, ctrl, ctrlAll, tx)
 
 \item{ctrlAll}{CN data of all control samples}
 
-\item{tx}{vector of list of transcripts#'}
+\item{tx}{vector of list of transcripts}
+
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically 
+determine the array type (450k, EPIC)}
 }
 \value{
 list with tx-names, p-values and used statistical test
@@ -23,7 +26,7 @@ Calculates CN values for given list of transcripts, uses standard
 values to increase speed: median; wilcoxon; difference
 }
 \examples{
-#' data <- data.frame(
+data <- data.frame(
 smp1=c(-8.12, -5.225, -3.24, -3.61),
 smp2=c(-5.0, -3.98, -4.06, -4.5),
 smp3=c(NA, -2.48, -2.27, -2.1)
@@ -40,6 +43,6 @@ rownames(data) <- c(
 rownames(ctrlAll) <- rownames(data)
 ctrl <- apply(ctrlAll, 1, "median")
 names(ctrl) <- rownames(data)
-getTxValues(data, ctrl, ctrlAll, "uc001aih.1")
+getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 }
 

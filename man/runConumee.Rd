@@ -23,6 +23,9 @@ Analyzes the given 450k data with conumee, extracting
 either segments, bins or transcripts.
 }
 \examples{
-print("Please refer to the 'completeWorkflow' vignette!")
+require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+data <- minfi::preprocessRaw(minfiData::RGsetEx[,1:2])
+ctrl <- minfi::preprocessRaw(minfiData::RGsetEx[,3:4])
+runConumee(data,ctrl,"segments")
 }
 

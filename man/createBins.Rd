@@ -5,7 +5,7 @@
 \title{Bin CN data}
 \usage{
 createBins(data, ctrl, ctrlAll, statistic = "wilcoxon", binsize = 2e+05,
-  output = "diff", arrayType = "auto")
+    output = "diff", arrayType = "auto", noCores = -1)
 }
 \arguments{
 \item{data}{sample data}
@@ -21,8 +21,11 @@ vs smp); "t.test" or "wilcoxon" (Mann-Whitney-U Test)}
 
 \item{output}{"ratio" (Sample/Ctrl) or "diff" (Sample-Ctrl)}
 
-\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically determine 
-the array type (450k, EPIC)}
+\item{arrayType}{"auto","450k", "EPIC"; auto -> tries to automatically 
+determine the array type (450k, EPIC)}
+
+\item{noCores}{number of cores for parallelization: needed 
+to pass the cran examples :/}
 }
 \value{
 bins with their corresponding value
@@ -31,17 +34,10 @@ bins with their corresponding value
 Calculate mean, median, sd for each bin for a given binsize.
 }
 \examples{
-data <- data.frame(
-smp1=c(-8.12, -5.225, -3.24, -3.61),
-smp2=c(-5.0, -3.98, -4.06, -4.5),
-smp3=c(NA, -2.48, -2.27, -2.1)
-)
-ctrlAll <- data.frame(
-ctl1=c(1.0, -3.6, 0.7, -0.73),
-ctl2=c(-0.4, -4.1, -4.2, -3.9),
-ctl2=c(0.74, -1.12, -2.8, -1.67)
-)
-ctrl <- apply(ctrlAll, 1, "median")
-createBins(data,ctrlAll, ctrl, 50000)
+data <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
+ctrlAll <- data[,4:6]
+ctrl <- data[,5]
+data <- data[,1:3]
+createBins(data,ctrl,ctrlAll, binsize=5000000, noCores=1)[1:3,]
 }
 
