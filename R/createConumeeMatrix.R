@@ -78,7 +78,7 @@ createConumeeMatrix.segment <- function(data, mod = "seg.median") {
         }
         
         tmp <- t(tmpData)
-        tmp <- tmp[!duplicated(rownames(tmp)), ]
+        tmp <- tmp[!duplicated(rownames(tmp)), ,drop=F]
         completeDATA <- rbind.fill(completeDATA, data.frame(tmp))
         completeChrom <- c(completeChrom, rep(ch, length(tmp[, 1])))
         completePos <- c(completePos, rownames(tmp))
