@@ -1,7 +1,7 @@
 Package: cnAnalysis450k
 Type: Package
 Title: Copy Number Analysis for 450k Illumina Methylation Arrays
-Version: 0.99.9
+Version: 0.99.8
 Date: 2017-01-27
 Author: Maximilian Knoll
 Maintainer: Maximilian Knoll <m.knoll@dkfz.de>
