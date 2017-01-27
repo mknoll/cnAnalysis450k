@@ -62,10 +62,10 @@ runConumee <- function(data,
     ## Workaround:
     object <- new("CNV.data")
     object@intensity <- as.data.frame(data)
-    data.cnv <- CNV.check(object)
+    data.cnv <- object
     object <- new("CNV.data")
     object@intensity <- as.data.frame(ctrl)
-    ctrl.cnv <- CNV.check(object)
+    ctrl.cnv <- object
     
     ##collect conumee data
     conumeeData <- NULL
