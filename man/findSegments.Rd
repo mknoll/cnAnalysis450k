@@ -40,10 +40,10 @@ Segments are identified with changepoints cpr.var()
 function (BinSeg)
 }
 \examples{
-samples <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
-ctrlAll <- samples[,4:6]
-ctrl <- samples[,4] #ctrl <- apply(ctrlAll, 1, "median")
-samples <- samples[,1:3]
+norm <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
+ctrlAll <- norm[,4:6]
+ctrl <- norm[,4] #ctrl <- apply(ctrlAll, 1, "median")
+samples <- norm[,1:3]
 findSegments(samples,ctrl, ctrlAll)[1:4,]
 }
 

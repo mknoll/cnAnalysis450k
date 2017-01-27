@@ -21,8 +21,9 @@
 #' 
 #' @examples 
 #' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-#' data <- minfi::preprocessRaw(minfiData::RGsetEx[,1:2])
-#' ctrl <- minfi::preprocessRaw(minfiData::RGsetEx[,3:4])
+#' norm <- minfi::preprocessRaw(minfiData::RGsetEx)
+#' data <- norm[,1:3]
+#' ctrl <- norm[,4:6]
 #' runConumee(data,ctrl,"segments")
 runConumee <- function(data,
                         ctrl,
@@ -45,6 +46,14 @@ runConumee <- function(data,
                     cnAnalysis450k::determineArrayType(data),
                     cnAnalysis450k::determineArrayType(ctrl)))
     }
+    ## test for methylset
+    if (class(data) == "MethylSet") {
+        data <- minfi::getCN(data)
+    }
+    if (class(ctrl) == "MethylSet") {
+        ctrl <- minfi::getCN(ctrl)
+    }
+    
     ## check for matching ids
     if (any(rownames(ctrl) != rownames(data))) {
         stop("CpG probe IDs not in the same order in data and ctrl!")
