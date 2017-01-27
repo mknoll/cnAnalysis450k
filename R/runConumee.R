@@ -55,8 +55,17 @@ runConumee <- function(data,
                         detail_regions = createGRangesObj(tx))
     }
     
-    data.cnv <- CNV.load(data)
-    ctrl.cnv <- CNV.load(ctrl)
+    ## this is somehow broken in the conumee package TODO
+    # Fehler in .local(input, ...) : unbenutztes Argument (NULL)
+    #data.cnv <- CNV.load(data)
+    #ctrl.cnv <- CNV.load(ctrl)
+    ## Workaround:
+    object <- new("CNV.data")
+    object@intensity <- as.data.frame(data)
+    data.cnv <- CNV.check(object)
+    object <- new("CNV.data")
+    object@intensity <- as.data.frame(ctrl)
+    ctrl.cnv <- CNV.check(object)
     
     ##collect conumee data
     conumeeData <- NULL
