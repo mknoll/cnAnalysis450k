@@ -23,6 +23,6 @@ norm <- minfi::preprocessRaw(minfiData::RGsetEx)
 samples <- norm[,1:3]
 ctrl <- norm[,4:6]
 candidatesDATA <- runConumee(samples,ctrl,"segments")
-createConumeeMatrix(candidatesDATA)[1:3,]
+createConumeeMatrix(candidatesDATA)
 }
 

@@ -98,7 +98,7 @@ runConumee <- function(data,
         qry@intensity <- as.data.frame(data[,i])
         obj <- new("CNV.analysis")
         obj@fit$args <- list(intercept = TRUE)
-        names(obj) <- colnames(qry@intensity)
+        names(obj) <- colnames(data)[i]
         obj@anno <- anno.cnv
         tmpDat <- data.frame(y = qry@intensity[,1], X = ctrl.cnv@intensity)
         #tmpDat <- apply(tmpDat, 2, "unlist")
