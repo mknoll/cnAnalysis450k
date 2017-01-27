@@ -25,17 +25,17 @@ the neccessary parameters refer to the "completeWorkflow" vignette.
 #dataset <- minfiDataEPIC::RGsetEPIC
 dataset <- minfiData::RGsetEx
 
-#Controls
-ctrlAll <-
+#Normalize data
+normData <- 
 minfi:::getCN(minfi::preprocessIllumina(
-    dataset[, 1:3]))
+    dataset))
+#Controls
+ctrlAll <- normData[,1:3]
 ctrlAll[is.infinite(ctrlAll)] <- NA
 ctrlAll <- scale(ctrlAll)
 ctrl <- apply(ctrlAll, 1, "median")
 #Samples
-samples <-
-minfi::getCN(minfi::preprocessIllumina(
-    dataset[, 4:6]))
+samples <- normData[,4:6]
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
 
