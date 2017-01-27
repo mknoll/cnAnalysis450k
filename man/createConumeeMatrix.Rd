@@ -20,9 +20,9 @@ Create matrix from conumee segment / bin data.
 \examples{
 require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 norm <- minfi::preprocessRaw(minfiData::RGsetEx)
-samples <- norm[,1:3]
-ctrl <- norm[,4:6]
+samples <- norm[,1]
+ctrl <- norm[,4]
 candidatesDATA <- runConumee(samples,ctrl,"segments")
-createConumeeMatrix(candidatesDATA)
+createConumeeMatrix(candidatesDATA)[1:3,]
 }
 

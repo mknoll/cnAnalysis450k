@@ -22,8 +22,8 @@
 #' @examples 
 #' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 #' norm <- minfi::preprocessRaw(minfiData::RGsetEx)
-#' data <- norm[,1:3]
-#' ctrl <- norm[,4:6]
+#' data <- norm[,1]
+#' ctrl <- norm[,4]
 #' runConumee(data,ctrl,"segments")
 runConumee <- function(data,
                         ctrl,
@@ -82,8 +82,8 @@ runConumee <- function(data,
     for (i in 1:length(data[1,])) {
         print(paste("Run conumee analysis for ",colnames(data)[i], "..."))
         ################################
-        ### WARUM!?=§$%DSF"§? vorher hat 
-        ### einfach alles mit CNV.load & 
+        ### WARUM? vorher hat 
+        ### einfach alles mit CNV.load +
         ### CNV.fit funktioniert! 
         ##################################
         ## This is an adaptes version of 
