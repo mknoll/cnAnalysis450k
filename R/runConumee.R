@@ -71,7 +71,7 @@ runConumee <- function(data,
     
     ##collect conumee data
     conumeeData <- NULL
-    for (i in 1:length(data[1,]) {
+    for (i in 1:length(data[1,])) {
         print(paste("Run conumee analysis for ",colnames(data)[i], "..."))
         ################################
         ### WARUM!?=§$%DSF"§? vorher hat 
