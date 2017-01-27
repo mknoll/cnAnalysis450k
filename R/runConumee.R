@@ -15,6 +15,7 @@
 #' @import conumee
 #' @import plyr
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
+#' @import impute
 #'
 #' @export
 #' 
@@ -44,6 +45,10 @@ runConumee <- function(data,
                     cnAnalysis450k::determineArrayType(data),
                     cnAnalysis450k::determineArrayType(ctrl)))
     }
+    ## check for matching ids
+    if (any(rownames(ctrl) != rownames(data))) {
+        stop("CpG probe IDs not in the same order in data and ctrl!")
+    }
     
     if (what == "segments" | what == "bins") {
         anno.cnv <- CNV.create_anno(
@@ -55,25 +60,53 @@ runConumee <- function(data,
                         detail_regions = createGRangesObj(tx))
     }
     
-    ## this is somehow broken in the conumee package TODO
+    ## this is somehow broken in the conumee package 
     # Fehler in .local(input, ...) : unbenutztes Argument (NULL)
     #data.cnv <- CNV.load(data)
     #ctrl.cnv <- CNV.load(ctrl)
     ## Workaround:
-    object <- new("CNV.data")
-    object@intensity <- as.data.frame(data)
-    data.cnv <- object
     object <- new("CNV.data")
     object@intensity <- as.data.frame(ctrl)
     ctrl.cnv <- object
     
     ##collect conumee data
     conumeeData <- NULL
-    for (i in 1:length(names(data.cnv))) {
-        print(paste("Run conumee analysis for ", names(data.cnv)[i], "..."))
-        x <- CNV.fit(query=data.cnv[i], 
-                    ref=ctrl.cnv[1:length(colnames(ctrl.cnv@intensity))], 
-                    anno.cnv)
+    for (i in 1:length(data[1,]) {
+        print(paste("Run conumee analysis for ",colnames(data)[i], "..."))
+        ################################
+        ### WARUM!?=§$%DSF"§? vorher hat 
+        ### einfach alles mit CNV.load & 
+        ### CNV.fit funktioniert! 
+        ##################################
+        ## This is an adaptes version of 
+        ## the original conumee CNV.fit 
+        ## function!
+        warning("This is NOT the original conumee CNV.fit function!")
+        warning("All infinite values are set to NA!")
+        warning("All NA values are substituted using impute.knn from the impute package!")
+        warning("These values have been excluded in the original version!")
+        qry <- new("CNV.data")
+        qry@intensity <- as.data.frame(data[,i])
+        obj <- new("CNV.analysis")
+        obj@fit$args <- list(intercept = TRUE)
+        names(obj) <- colnames(qry@intensity)
+        obj@anno <- anno.cnv
+        tmpDat <- data.frame(y = qry@intensity[,1], X = ref@intensity)
+        #tmpDat <- apply(tmpDat, 2, "unlist")
+        tmpDat <- data.matrix(tmpDat)
+        tmpDat[is.infinite(tmpDat)] <- NA
+        tmpDat <- impute::impute.knn(tmpDat)
+        tmpDat <- data.frame(tmpDat$data)
+        ref.fit <- lm(y ~ ., data = tmpDat)
+        obj@fit$coef <- ref.fit$coefficients
+        ref.predict <- predict(ref.fit)
+        ref.predict[ref.predict < 1] <- 1
+        obj@fit$ratio <- log2(qry@intensity[,1]/ref.predict)
+        obj@fit$noise <- sqrt(mean((obj@fit$ratio[-1] - obj@fit$ratio[-length(obj@fit$ratio)])^2, 
+                                   na.rm = TRUE))
+        x <- obj
+        ###################################
+        
         x <- CNV.bin(x)
         
         if (what == "segments") {
