@@ -65,9 +65,8 @@ runConumee <- function(data,
     #data.cnv <- CNV.load(data)
     #ctrl.cnv <- CNV.load(ctrl)
     ## Workaround:
-    object <- new("CNV.data")
-    object@intensity <- as.data.frame(ctrl)
-    ctrl.cnv <- object
+    ctrl.cnv <- new("CNV.data")
+    ctrl.cnv@intensity <- as.data.frame(ctrl)
     
     ##collect conumee data
     conumeeData <- NULL
@@ -83,7 +82,8 @@ runConumee <- function(data,
         ## function!
         warning("This is NOT the original conumee CNV.fit function!")
         warning("All infinite values are set to NA!")
-        warning("All NA values are substituted using impute.knn from the impute package!")
+        warning("All NA values are substituted using impute.knn from 
+            the impute package!")
         warning("These values have been excluded in the original version!")
         qry <- new("CNV.data")
         qry@intensity <- as.data.frame(data[,i])
@@ -91,7 +91,7 @@ runConumee <- function(data,
         obj@fit$args <- list(intercept = TRUE)
         names(obj) <- colnames(qry@intensity)
         obj@anno <- anno.cnv
-        tmpDat <- data.frame(y = qry@intensity[,1], X = ref@intensity)
+        tmpDat <- data.frame(y = qry@intensity[,1], X = ctrl.cnv@intensity)
         #tmpDat <- apply(tmpDat, 2, "unlist")
         tmpDat <- data.matrix(tmpDat)
         tmpDat[is.infinite(tmpDat)] <- NA
@@ -102,8 +102,9 @@ runConumee <- function(data,
         ref.predict <- predict(ref.fit)
         ref.predict[ref.predict < 1] <- 1
         obj@fit$ratio <- log2(qry@intensity[,1]/ref.predict)
-        obj@fit$noise <- sqrt(mean((obj@fit$ratio[-1] - obj@fit$ratio[-length(obj@fit$ratio)])^2, 
-                                   na.rm = TRUE))
+        obj@fit$noise <- sqrt(mean((obj@fit$ratio[-1] - 
+            obj@fit$ratio[-length(obj@fit$ratio)])^2, 
+            na.rm = TRUE))
         x <- obj
         ###################################
         
@@ -120,7 +121,7 @@ runConumee <- function(data,
             } else {
                 conumeeData <- cbind(conumeeData, out[, 5])
                 colnames(conumeeData)[length(conumeeData[1, ])] <-
-                    names(data.cnv)[i]
+                    colnames(data)[i]
             }
         } else if (what == "transcripts") {
             x <- CNV.detail(x)
@@ -131,7 +132,7 @@ runConumee <- function(data,
                 conumeeData <- cbind(conumeeData, out[, 8])
             }
             colnames(conumeeData)[length(conumeeData[1, ])] <-
-                names(data.cnv)[i]
+                colnames(data)[i]
         }
     }
     
