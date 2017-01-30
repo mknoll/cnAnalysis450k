@@ -321,7 +321,7 @@ findCutoffsRun <-
                     abline(v = maxVGain$key[2], col = 6)
                     abline(v = assumedSepGain,
                             lwd = 2,
-                            :col = 4)
+                            col = 4)
                 }
             }
             ######################################
