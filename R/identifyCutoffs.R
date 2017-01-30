@@ -56,8 +56,8 @@ findCutoffs <-
                 chrDat <- data[which(chrR[, 1] == ch), ]
                 outData <-
                     rbind.fill(outData,
-                        findCutoffsRun(chrDat, zeichne, ignoreNAs,
-                                        eps, proximity))
+                                findCutoffsRun(chrDat, zeichne, ignoreNAs,
+                                            eps, proximity))
             }
             return(outData)
         }
@@ -108,7 +108,7 @@ findCutoffsRun <-
                     proximity[2] + i > length(subD[, 1]), 0, proximity[2]
                 )))
             if (zeichne) {
-                hist(subD[i, ], breaks = 100)
+                hist(subD[i, ,drop=FALSE], breaks = 100)
             }
             
             epsilon <- eps
@@ -148,7 +148,7 @@ findCutoffsRun <-
                         to = maxV,
                         by = eps)
             if (zeichne)  {
-                plot(density(subD[i, ], na.rm = TRUE))
+                plot(density(subD[i, ,drop=FALSE], na.rm = TRUE))
             }
             
             ##find
@@ -189,18 +189,20 @@ findCutoffsRun <-
             ## wendepunkte
             wendepunkte <- c()
             d2 <- diff(df(xVal))
-            for (k in 2:(length(d2) - 1)) {
-                if (is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1])) {
-                    next
+            if (length(d2) >= 3) {
+                for (k in 2:(length(d2) - 1)) {
+                    if (is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1])) {
+                        next
+                    }
+                    if (d2[k - 1] < d2[k] &&
+                            d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
+                            d2[k + 1] > d2[k])  {
+                        wendepunkte <- c(wendepunkte, k)
+                    }
                 }
-                if (d2[k - 1] < d2[k] &&
-                    d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
-                    d2[k + 1] > d2[k])  {
-                    wendepunkte <- c(wendepunkte, k)
+                if (zeichne) {
+                    points(xVal[wendepunkte], df(xVal[wendepunkte]), col = 4)
                 }
-            }
-            if (zeichne) {
-                points(xVal[wendepunkte], df(xVal[wendepunkte]), col = 4)
             }
             
             ###########################
@@ -319,7 +321,7 @@ findCutoffsRun <-
                     abline(v = maxVGain$key[2], col = 6)
                     abline(v = assumedSepGain,
                             lwd = 2,
-                            col = 4)
+                            :col = 4)
                 }
             }
             ######################################
@@ -394,177 +396,183 @@ findCutoffsRunFast <-
                 #Enough points to proceed?
                 if (length(subD[i, ]) - length(tmpNA[is.na(tmpNA)]) <= 2) {
                     warning(
-                    paste(
-                    "Only 2 datapoints for",
-                    rownames(subD)[i],
-                    " (debug: i=",
-                    i,
-                    ") -> skipping!"
+                        paste(
+                            "Only 2 datapoints for",
+                            rownames(subD)[i],
+                            " (debug: i=",
+                            i,
+                            ") -> skipping!"
+                        )
+                    )
+                    cont <- FALSE
+                }
+            }
+            
+            if (cont) {
+                minV <- min(subD[i, ], na.rm = TRUE) - epsilon
+                maxV <- max(subD[i, ], na.rm = TRUE) + epsilon
+                ##fit function
+                df <- approxfun(density(subD[i, ], na.rm = TRUE))
+                
+                #Sollte mit einer numerisch etwas stabieleren 
+                #Loesung ersetzt werden.
+                xVal <- seq(from = minV,
+                            to = maxV,
+                            by = eps)
+                
+                ##find
+                d1 <- diff(df(xVal))
+                ## Minima
+                posD1Min <- c()
+                for (j in 2:length(d1)) {
+                    pos <- which(d1[j - 1] < 0 & d1[j] > 0)
+                    if (length(pos) == 1) {
+                        posD1Min <- c(posD1Min, j)
+                    }
+                }
+                minV <- data.frame(key = xVal[posD1Min], 
+                                    val = df(xVal[posD1Min]))
+                
+                ## Maxima
+                posD1Max <- c()
+                for (j in 2:length(d1)) {
+                    pos <- which(d1[j - 1] > 0 & d1[j] < 0)
+                    if (length(pos) == 1) {
+                        posD1Max <- c(posD1Max, j)
+                    }
+                }
+                #order maxima
+                maxV <- data.frame(
+                    key = xVal[posD1Max], val = df(xVal[posD1Max]))
+                maxV <- maxV[rev(order(maxV$val)), ]
+                assumedBaseline <- maxV$key[1]
+                
+                ## wendepunkte
+                wendepunkte <- c()
+                d2 <- diff(df(xVal))
+                if (length(d2) >= 3) {
+                    for (k in 2:(length(d2) - 1)) {
+                        if (!(is.na(d2[k - 1]) || 
+                            is.na(d2[k]) || is.na(d2[k + 1]))) {
+                            if (d2[k - 1] < d2[k] &&
+                                    d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
+                                    d2[k + 1] > d2[k])  {
+                                wendepunkte <- c(wendepunkte, k)
+                            }
+                        }
+                    }
+                }
+                
+                ###########################
+                ##potentielle cutoffs: drei wendepunkte zwischen zwei 
+                #extremalstellen od extremalstelle u rand
+                wp <-
+                    data.frame(key = xVal[wendepunkte], 
+                                val = df(xVal[wendepunkte]))
+                #rechts
+                assumedSepGainWP <- NA
+                extrR <- rbind(minV[which(minV$key > maxV$key[1]), ])
+                if (dim(extrR)[[1]] == 0) {
+                    ##rechts kein weiteres extremum -> randwert
+                    wpTmp <- wp[which(wp$key > maxV$key[1]), ]
+                    wpTmp <- wpTmp[order(wpTmp$key), ]
+                    if (length(wpTmp[, 1]) >= 3) {
+                        assumedSepGainWP <- mean(wpTmp[2:3, "key"])
+                        if (length(assumedSepGainWP) > 1) {
+                            assumedSepGainWP <- mean(assumedSepGainWP)
+                        }
+                    }
+                } else {
+                    ## rechts weiteres extremum; sind vorher 3 wp vorhanden?
+                    wpTmp <-
+                        wp[which(wp$key > maxV$key[1] 
+                            & wp$key < extrR$key[1]), ]
+                    if (length(wpTmp[, 1]) >= 3) {
+                        assumedSepGainWP <-  mean(wpTmp[2:3, "key"])
+                        if (length(assumedSepGainWP) > 1) {
+                            assumedSepGainWP <- mean(assumedSepGainWP)
+                        }
+                    }
+                }
+                #links
+                assumedSepLossWP <- NA
+                extrL <- rbind(minV[which(minV$key < maxV$key[1]), ])
+                if (dim(extrL)[[1]] == 0) {
+                    ##links kein weiteres extremum -> randwert
+                    wpTmp <- wp[which(wp$key < maxV$key[1]), ]
+                    wpTmp <- wpTmp[order(wpTmp$key), ]
+                    if (length(wpTmp[, 1]) >= 3) {
+                        assumedSepLossWP <-  mean(wpTmp[2:3, "key"])
+                        if (length(assumedSepLossWP) > 1) {
+                            assumedSepLossWP <- mean(assumedSepLossWP)
+                        }
+                    }
+                } else {
+                    ## links weiteres extremum; sind vorher 3 wp vorhanden?
+                    wpTmp <-
+                        wp[which(wp$key < maxV$key[1] 
+                            & wp$key > extrL$key[1]), ]
+                    if (length(wpTmp[, 1]) >= 3) {
+                        assumedSepLossWP <- mean(wpTmp[2:3, "key"])
+                        if (length(assumedSepLossWP) > 1) {
+                            assumedSepLossWP <- mean(assumedSepLossWP)
+                        }
+                    }
+                }
+                
+                
+                ###########################
+                #### find losses
+                maxVLoss <- maxV[which(maxV$key <= maxV$key[1]), ]
+                #find separating value for first and second max
+                minCand <-
+                    minV[which(minV$key <= maxVLoss$key[1] &
+                                    minV$key >= maxVLoss$key[2]), ]
+                assumedSepLoss <- NA
+                if (dim(minCand)[[1]] > 0) {
+                    assumedSepLoss <-
+                        minCand[which(minCand$val == min(minCand$val)), "key"]
+                    if (length(assumedSepLoss) > 1) {
+                        assumedSepLoss <- mean(assumedSepLoss)
+                    }
+                }
+                
+                
+                #### find gains
+                maxVGain <- maxV[which(maxV$key >= maxV$key[1]), ]
+                #find separating value for first and second max
+                minCand <-
+                    minV[which(minV$key >= maxVGain$key[1] &
+                                    minV$key <= maxVGain$key[2]), ]
+                assumedSepGain <- NA
+                if (dim(minCand)[[1]] > 0) {
+                    assumedSepGain <-
+                        minCand[which(minCand$val == min(minCand$val)), "key"]
+                    if (length(assumedSepGain) > 1) {
+                        assumedSepGain <- mean(assumedSepGain)
+                    }
+                }
+                
+                ##assemble data
+                vec <- data.frame(
+                    rn = rownames(subD)[i],
+                    i = i,
+                    cutoffLoss = assumedSepLoss,
+                    cutoffGain = assumedSepGain,
+                    cutoffLossWP = assumedSepLossWP,
+                    cutoffGainWP = assumedSepGainWP,
+                    baseline = assumedBaseline
                 )
-                )
-            cont <- FALSE
+                
+                vec
+            }
         }
+        
+        ret <- do.call(rbind, out)
+        ret <- data.frame(ret)
+        ret <- ret[order(ret$i),]
+        
+        doParallel::stopImplicitCluster()
+        
+        return(ret)
     }
-
-    if (cont) {
-        minV <- min(subD[i, ], na.rm = TRUE) - epsilon
-        maxV <- max(subD[i, ], na.rm = TRUE) + epsilon
-        ##fit function
-        df <- approxfun(density(subD[i, ], na.rm = TRUE))
-        
-        #Sollte mit einer numerisch etwas stabieleren 
-        #Loesung ersetzt werden.
-        xVal <- seq(from = minV,
-                    to = maxV,
-                    by = eps)
-        
-        ##find
-        d1 <- diff(df(xVal))
-        ## Minima
-        posD1Min <- c()
-        for (j in 2:length(d1)) {
-            pos <- which(d1[j - 1] < 0 & d1[j] > 0)
-            if (length(pos) == 1) {
-                posD1Min <- c(posD1Min, j)
-            }
-        }
-        minV <- data.frame(key = xVal[posD1Min], 
-                            val = df(xVal[posD1Min]))
-        
-        ## Maxima
-        posD1Max <- c()
-        for (j in 2:length(d1)) {
-            pos <- which(d1[j - 1] > 0 & d1[j] < 0)
-            if (length(pos) == 1) {
-                posD1Max <- c(posD1Max, j)
-            }
-        }
-        #order maxima
-        maxV <- data.frame(key = xVal[posD1Max], val = df(xVal[posD1Max]))
-        maxV <- maxV[rev(order(maxV$val)), ]
-        assumedBaseline <- maxV$key[1]
-        
-        ## wendepunkte
-        wendepunkte <- c()
-        d2 <- diff(df(xVal))
-        for (k in 2:(length(d2) - 1)) {
-            if (!(is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1]))) {
-                if (d2[k - 1] < d2[k] &&
-                    d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
-                    d2[k + 1] > d2[k])  {
-                    wendepunkte <- c(wendepunkte, k)
-                }
-            }
-        }
-        
-        ###########################
-        ##potentielle cutoffs: drei wendepunkte zwischen zwei 
-        #extremalstellen od extremalstelle u rand
-        wp <-
-            data.frame(key = xVal[wendepunkte], 
-                    val = df(xVal[wendepunkte]))
-        #rechts
-        assumedSepGainWP <- NA
-        extrR <- rbind(minV[which(minV$key > maxV$key[1]), ])
-        if (dim(extrR)[[1]] == 0) {
-            ##rechts kein weiteres extremum -> randwert
-            wpTmp <- wp[which(wp$key > maxV$key[1]), ]
-            wpTmp <- wpTmp[order(wpTmp$key), ]
-            if (length(wpTmp[, 1]) >= 3) {
-                assumedSepGainWP <- mean(wpTmp[2:3, "key"])
-                if (length(assumedSepGainWP) > 1) {
-                    assumedSepGainWP <- mean(assumedSepGainWP)
-                }
-            }
-        } else {
-            ## rechts weiteres extremum; sind vorher 3 wp vorhanden?
-            wpTmp <-
-                wp[which(wp$key > maxV$key[1] & wp$key < extrR$key[1]), ]
-            if (length(wpTmp[, 1]) >= 3) {
-                assumedSepGainWP <-  mean(wpTmp[2:3, "key"])
-                if (length(assumedSepGainWP) > 1) {
-                    assumedSepGainWP <- mean(assumedSepGainWP)
-                }
-            }
-        }
-        #links
-        assumedSepLossWP <- NA
-        extrL <- rbind(minV[which(minV$key < maxV$key[1]), ])
-        if (dim(extrL)[[1]] == 0) {
-            ##links kein weiteres extremum -> randwert
-            wpTmp <- wp[which(wp$key < maxV$key[1]), ]
-            wpTmp <- wpTmp[order(wpTmp$key), ]
-            if (length(wpTmp[, 1]) >= 3) {
-                assumedSepLossWP <-  mean(wpTmp[2:3, "key"])
-                if (length(assumedSepLossWP) > 1) {
-                    assumedSepLossWP <- mean(assumedSepLossWP)
-                }
-            }
-        } else {
-            ## links weiteres extremum; sind vorher 3 wp vorhanden?
-            wpTmp <-
-                wp[which(wp$key < maxV$key[1] & wp$key > extrL$key[1]), ]
-            if (length(wpTmp[, 1]) >= 3) {
-                assumedSepLossWP <- mean(wpTmp[2:3, "key"])
-                if (length(assumedSepLossWP) > 1) {
-                    assumedSepLossWP <- mean(assumedSepLossWP)
-                }
-            }
-        }
-        
-        
-        ###########################
-        #### find losses
-        maxVLoss <- maxV[which(maxV$key <= maxV$key[1]), ]
-        #find separating value for first and second max
-        minCand <-
-            minV[which(minV$key <= maxVLoss$key[1] &
-                        minV$key >= maxVLoss$key[2]), ]
-        assumedSepLoss <- NA
-        if (dim(minCand)[[1]] > 0) {
-            assumedSepLoss <-
-                minCand[which(minCand$val == min(minCand$val)), "key"]
-            if (length(assumedSepLoss) > 1) {
-                assumedSepLoss <- mean(assumedSepLoss)
-            }
-        }
-        
-        
-        #### find gains
-        maxVGain <- maxV[which(maxV$key >= maxV$key[1]), ]
-        #find separating value for first and second max
-        minCand <-
-            minV[which(minV$key >= maxVGain$key[1] &
-                        minV$key <= maxVGain$key[2]), ]
-        assumedSepGain <- NA
-        if (dim(minCand)[[1]] > 0) {
-            assumedSepGain <-
-                minCand[which(minCand$val == min(minCand$val)), "key"]
-            if (length(assumedSepGain) > 1) {
-                assumedSepGain <- mean(assumedSepGain)
-            }
-        }
-        
-        ##assemble data
-        vec <- data.frame(
-            rn = rownames(subD)[i],
-            i = i,
-            cutoffLoss = assumedSepLoss,
-            cutoffGain = assumedSepGain,
-            cutoffLossWP = assumedSepLossWP,
-            cutoffGainWP = assumedSepGainWP,
-            baseline = assumedBaseline
-        )
-
-        vec
-        }
-    }
-
-    ret <- do.call(rbind, out)
-    ret <- data.frame(ret)
-    ret <- ret[order(ret$i),]
-
-    doParallel::stopImplicitCluster()
-
-    return(ret)
-}
