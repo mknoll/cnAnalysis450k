@@ -35,9 +35,9 @@ Calculate mean, median, sd for each bin for a given binsize.
 }
 \examples{
 data <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
-ctrlAll <- data[,4:6]
+ctrlAll <- data[,4]
 ctrl <- data[,5]
-data <- data[,1:3]
-createBins(data,ctrl,ctrlAll, binsize=5000000, noCores=1)[1:3,]
+data <- data[,1]
+createBins(data,ctrl,ctrlAll, binsize=50000000, noCores=1)[1:3,]
 }
 
