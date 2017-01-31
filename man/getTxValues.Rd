@@ -48,7 +48,8 @@ rownames(data) <- c(
 "cg17434257", "cg17592667"
 )
 rownames(ctrlAll) <- rownames(data)
-ctrl <- apply(ctrlAll, 1, "median")
+#ctrl <- apply(ctrlAll, 1, "median")
+ctrl <- c(0.74, -3.6, -2.8, -1.67)
 names(ctrl) <- rownames(data)
 getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 }

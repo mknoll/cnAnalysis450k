@@ -19,7 +19,8 @@
 #' @examples
 #' m <- minfi::getMeth(minfiData::MsetEx[,1])
 #' u <- minfi::getUnmeth(minfiData::MsetEx[,1])
-#' ot <- minfi::getAnnotation(minfiData::MsetEx)$Type
+#' #ot <- minfi::getAnnotation(minfiData::MsetEx)$Type
+#' ot <- c(rep("I",200), rep("II", (length(u[,1])-200)))
 #' dasenMset(m,u,ot)
 dasenMset <- function(mns, uns, onetwo) {
     mnsc <- wateRmelon::dfsfit(mns,  onetwo)  
