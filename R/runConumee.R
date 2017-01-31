@@ -20,11 +20,13 @@
 #' @export
 #' 
 #' @examples 
-#' require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-#' norm <- minfi::preprocessRaw(minfiData::RGsetEx)
-#' data <- norm[,1]
-#' ctrl <- norm[,4]
-#' runConumee(data,ctrl,"segments")
+#' print("A runnable example is also shown in the 
+#' createConumeeMatrix examples")
+#' #require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#' #norm <- minfi::preprocessRaw(minfiData::RGsetEx)
+#' #data <- norm[,1]
+#' #ctrl <- norm[,4]
+#' #runConumee(data,ctrl,"segments")
 runConumee <- function(data,
                         ctrl,
                         what = "segments",

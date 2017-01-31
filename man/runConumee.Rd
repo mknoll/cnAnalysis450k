@@ -23,10 +23,12 @@ Analyzes the given 450k data with conumee, extracting
 either segments, bins or transcripts.
 }
 \examples{
-require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-norm <- minfi::preprocessRaw(minfiData::RGsetEx)
-data <- norm[,1]
-ctrl <- norm[,4]
-runConumee(data,ctrl,"segments")
+print("A runnable example is also shown in the 
+createConumeeMatrix examples")
+#require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#norm <- minfi::preprocessRaw(minfiData::RGsetEx)
+#data <- norm[,1]
+#ctrl <- norm[,4]
+#runConumee(data,ctrl,"segments")
 }
 
