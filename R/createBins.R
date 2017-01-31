@@ -29,7 +29,7 @@
 #' ctrlAll <- data[,4,drop=FALSE]
 #' ctrl <- data[,5] # apply(ctrlAll, 1, "median")
 #' data <- data[,1,drop=FALSE]
-#' createBins(data,ctrl,ctrlAll, binsize=50000000, noCores=1)[1:3,]
+#' createBins(data,ctrl,ctrlAll, binsize=50000000, noCores=2)[1:3,]
 createBins <-
     function(data,
             ctrl,
