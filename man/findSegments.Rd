@@ -41,9 +41,9 @@ function (BinSeg)
 }
 \examples{
 norm <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
-ctrlAll <- norm[,4:6]
+ctrlAll <- norm[,5:6]
 ctrl <- norm[,4] #ctrl <- apply(ctrlAll, 1, "median")
-samples <- norm[,1:3]
+samples <- norm[,1:2]
 findSegments(samples,ctrl, ctrlAll)[1:4,]
 }
 

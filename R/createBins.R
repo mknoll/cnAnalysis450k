@@ -26,9 +26,9 @@
 #'
 #' @examples
 #' data <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
-#' ctrlAll <- data[,4]
+#' ctrlAll <- data[,4:5]
 #' ctrl <- data[,5]
-#' data <- data[,1]
+#' data <- data[,1:2]
 #' createBins(data,ctrl,ctrlAll, binsize=50000000, noCores=1)[1:3,]
 createBins <-
     function(data,
