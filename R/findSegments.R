@@ -120,14 +120,14 @@ findSegments <-
                         ##statistics
                         if (statistic == "t.test") {
                             #standard t-test
-                            p.val <-
+                            p.val <- c(p.val,
                                 t.test(da[starts[pos]:ends[pos]], 
-                                ctAll[starts[pos]:ends[pos]])$p.value
+                                ctAll[starts[pos]:ends[pos]])$p.value)
                         } else if (statistic == "wilcoxon") {
                             #mann-whitney-wilcoxon test
-                            p.val <-
+                            p.val <- c(p.val,
                                 wilcox.test(da[starts[pos]:ends[pos]], 
-                                ctAll[starts[pos]:ends[pos]])$p.value
+                                ctAll[starts[pos]:ends[pos]])$p.value)
                         } else {
                             stop("Unknown statistic!")
                         }
