@@ -306,9 +306,10 @@ findSegmentsFast <-
         ##get annotation
         ## ggf cachen
         if (arrayType=="auto") {
-            anno <- getAnnoData(determineArrayType(data))
+            anno <- cnAnalysis450k::getAnnoData(
+	    cnAnalysis450k::determineArrayType(data))
         } else {
-            anno <- getAnnoData(arrayType)
+            anno <- cnAnalysis450k::getAnnoData(arrayType)
         }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
         
@@ -370,12 +371,13 @@ findSegmentsFast <-
                     ends <- res@cpts
                     starts <- c(0, ends[1:(length(ends) - 1)]) + 1
                     median <- c()
+		    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))
                         ##statistics
-                        p.val <- wilcox.test(da[starts[pos]:ends[pos]], 
-                                            ctAll[starts[pos]:ends[pos]])$p.value
+                        p.val <- c(p.val, wilcox.test(da[starts[pos]:ends[pos]], 
+                                            ctAll[starts[pos]:ends[pos]])$p.value)
                     }
                     segDF <- NULL
                 } else {
