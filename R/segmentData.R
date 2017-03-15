@@ -44,11 +44,12 @@ segmentData <- function(data, cutoffs, effectsize = c(0, 0)) {
     
     candDataLG <-
         completeDATA[
-            which(rownames(completeDATA) %in% signCluster$rn), ,drop=FALSE]
-    gainsLosses <- NULL
+            which(rownames(completeDATA) %in% signCluster$rn), ,drop=FALSE]    
+    ind <- match(rownames(candDataLG), signCluster$rn)
     
     total <- length(candDataLG[, 1])
     for (i in 1:total) {
+        tm <- Sys.time()
         ## progress
         if (i %% 10 == 0) { 
             utils::flush.console() 
@@ -56,56 +57,33 @@ segmentData <- function(data, cutoffs, effectsize = c(0, 0)) {
         }
         
         ## gains / losses
-        cutG <-
-            signCluster[which(signCluster$rn == rownames(candDataLG)[i]), 
-                        "cutoffGain"]
-        cutL <-
-            signCluster[which(signCluster$rn == rownames(candDataLG)[i]), 
-                        "cutoffLoss"]
-        ## Wendepunkte?
-        cutGWP <-
-            signCluster[which(signCluster$rn == rownames(candDataLG)[i]), 
-                        "cutoffGainWP"]
-        cutLWP <-
-            signCluster[which(signCluster$rn == rownames(candDataLG)[i]), 
-                        "cutoffLossWP"]
+        #idx <- which(signCluster$rn == rownames(candDataLG)[i])
+        idx <- ind[i]
+        
         ## Baseline
-        base <-
-            signCluster[which(signCluster$rn == rownames(candDataLG)[i]), 
-                        "cutoffGainWP"]
+        base <- signCluster[idx, 7] #"cutoffGainWP"]
         
         ## fallback auf wp cutoff, wenn keine echten maxima identifiziert 
         #werden konnten
-        if (is.na(cutG) || length(cutG) == 0) {
-            cutG <- cutGWP
-        }
-        if (is.na(cutL) || length(cutL) == 0) {
-            cutL <- cutLWP
-        }
+        cutG <- ifelse(is.na(signCluster[idx, 4]), 
+                    signCluster[idx, 6],signCluster[idx, 4])
+        cutL <- ifelse(is.na(signCluster[idx, 3]), 
+                    signCluster[idx, 5],signCluster[idx, 3])
         
         ## minimale effectgroesse ueberschritten?
-        if (!is.na(cutL) &&
-            !is.na(base) && abs(base - cutL) < effectsize[1]) {
-            cutL <- NA
-        }
-        if (!is.na(cutG) &&
-            !is.na(base) && abs(base - cutG) < effectsize[2]) {
-            cutG <- NA
-        }
-        #print(paste(i, "G:", cutG, " L:", cutL))
-        
-        vec <- data.frame(gain = cutG, loss = cutL)
-        gainsLosses <- rbind.fill(gainsLosses, vec)
+        diff <- abs(base - cutL)
+        if (!is.na(diff) && diff < effectsize[1]) { cutL <- NA } 
+        if (!is.na(diff) && diff < effectsize[2]) { cutG <- NA }
         
         candDataLG[i, ] <-
             ifelse(!is.na(cutG) & candDataLG[i, ] > cutG, 1, candDataLG[i, ])
         candDataLG[i, ] <-
             ifelse(!is.na(cutL) & candDataLG[i, ] < cutL,-1, candDataLG[i, ])
-        candDataLG[i, ] <-
-            ifelse(candDataLG[i, ] == 1 |
-                        candDataLG[i, ] == -1, candDataLG[i, ], 0)
+        tm <- c(tm, Sys.time())
     }
     cat("\n")
+    candDataLG <- apply(candDataLG, 2, 
+                        function(x) ifelse (x == 1 | x == -1, x, 0))
     
     return(candDataLG)
 }
