@@ -414,54 +414,35 @@ findCutoffsRunFast <-
                 ##fit function
                 df <- approxfun(density(subD[i, ], na.rm = TRUE))
                 
-                #Sollte mit einer numerisch etwas stabieleren 
+                #Sollte mit einer etwas stabileren 
                 #Loesung ersetzt werden.
-                xVal <- seq(from = minV,
-                            to = maxV,
-                            by = eps)
+                xVal <- seq.int(from=minV, to=maxV, by=eps)
                 
                 ##find
                 d1 <- diff(df(xVal))
                 ## Minima
-                posD1Min <- c()
-                for (j in 2:length(d1)) {
-                    pos <- which(d1[j - 1] < 0 & d1[j] > 0)
-                    if (length(pos) == 1) {
-                        posD1Min <- c(posD1Min, j)
-                    }
-                }
-                minV <- data.frame(key = xVal[posD1Min], 
-                                    val = df(xVal[posD1Min]))
+                posD1Min <- .Internal(which(d1[-length(d1)]<0 & d1[-1]>0))+1
+                minV <- data.frame(
+                    key = xVal[posD1Min], val = df(xVal[posD1Min]))
                 
                 ## Maxima
-                posD1Max <- c()
-                for (j in 2:length(d1)) {
-                    pos <- which(d1[j - 1] > 0 & d1[j] < 0)
-                    if (length(pos) == 1) {
-                        posD1Max <- c(posD1Max, j)
-                    }
-                }
-                #order maxima
+                posD1Max <- .Internal(which(d1[-length(d1)]>0 & d1[-1]<0))+1
                 maxV <- data.frame(
                     key = xVal[posD1Max], val = df(xVal[posD1Max]))
+                
                 maxV <- maxV[rev(order(maxV$val)), ]
                 assumedBaseline <- maxV$key[1]
                 
                 ## wendepunkte
-                wendepunkte <- c()
                 d2 <- diff(df(xVal))
-                if (length(d2) >= 3) {
-                    for (k in 2:(length(d2) - 1)) {
-                        if (!(is.na(d2[k - 1]) || 
-                            is.na(d2[k]) || is.na(d2[k + 1]))) {
-                            if (d2[k - 1] < d2[k] &&
-                                    d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
-                                    d2[k + 1] > d2[k])  {
-                                wendepunkte <- c(wendepunkte, k)
-                            }
-                        }
-                    }
+                wendepunkte <- c()
+                l=length(d2)
+                if (l >= 3) {
+                    l1=l-1
+                    wendepunkte <- c(.Internal(which(d2[-c(1:2)] > d2[-c(1,l)] & d2[-c(1:2)] < d2[-c(l1,l)]))+1,
+                            .Internal(which(d2[-c(1:2)] < d2[-c(1,l)] & d2[-c(1:2)] > d2[-c(l1,l)]))+1)
                 }
+                
                 
                 ###########################
                 ##potentielle cutoffs: drei wendepunkte zwischen zwei 
