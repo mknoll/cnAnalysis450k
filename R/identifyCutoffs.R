@@ -151,58 +151,39 @@ findCutoffsRun <-
                 plot(density(subD[i, ,drop=FALSE], na.rm = TRUE))
             }
             
+            
             ##find
             d1 <- diff(df(xVal))
             ## Minima
-            posD1Min <- c()
-            for (j in 2:length(d1)) {
-                pos <- which(d1[j - 1] < 0 & d1[j] > 0)
-                if (length(pos) == 1) {
-                    posD1Min <- c(posD1Min, j)
-                }
-            }
+            posD1Min <- .Internal(which(d1[-length(d1)]<0 & d1[-1]>0))+1
+            minV <- data.frame(
+                key = xVal[posD1Min], val = df(xVal[posD1Min]))
             if (zeichne) {
                 points(xVal[posD1Min], df(xVal[posD1Min]), col = 2)
             }
-            minV <- data.frame(key = xVal[posD1Min], 
-                                val = df(xVal[posD1Min]))
             
             ## Maxima
-            posD1Max <- c()
-            for (j in 2:length(d1)) {
-                pos <- which(d1[j - 1] > 0 & d1[j] < 0)
-                if (length(pos) == 1) {
-                    posD1Max <- c(posD1Max, j)
-                }
-            }
+            posD1Max <- .Internal(which(d1[-length(d1)]>0 & d1[-1]<0))+1
+            maxV <- data.frame(
+                key = xVal[posD1Max], val = df(xVal[posD1Max]))
+            
+            maxV <- maxV[rev(order(maxV$val)), ]
+            assumedBaseline <- maxV$key[1]
             if (zeichne) {
                 points(xVal[posD1Max], df(xVal[posD1Max]), col = 3)
             }
-            #order maxima
-            maxV <- data.frame(key = xVal[posD1Max], val = df(xVal[posD1Max]))
-            maxV <- maxV[rev(order(maxV$val)), ]
-            if (zeichne) {
-                abline(v = maxV$key[1], col = 6)
-            }
-            assumedBaseline <- maxV$key[1]
             
             ## wendepunkte
-            wendepunkte <- c()
             d2 <- diff(df(xVal))
-            if (length(d2) >= 3) {
-                for (k in 2:(length(d2) - 1)) {
-                    if (is.na(d2[k - 1]) || is.na(d2[k]) || is.na(d2[k + 1])) {
-                        next
-                    }
-                    if (d2[k - 1] < d2[k] &&
-                            d2[k + 1] < d2[k] || d2[k - 1] > d2[k] &&
-                            d2[k + 1] > d2[k])  {
-                        wendepunkte <- c(wendepunkte, k)
-                    }
-                }
-                if (zeichne) {
-                    points(xVal[wendepunkte], df(xVal[wendepunkte]), col = 4)
-                }
+            wendepunkte <- c()
+            l=length(d2)
+            if (l >= 3) {
+                l1=l-1
+                wendepunkte <- c(.Internal(which(d2[-c(1:2)] > d2[-c(1,l)] & d2[-c(1:2)] < d2[-c(l1,l)]))+1,
+                                 .Internal(which(d2[-c(1:2)] < d2[-c(1,l)] & d2[-c(1:2)] > d2[-c(l1,l)]))+1)
+            }
+            if (zeichne) {
+                points(xVal[wendepunkte], df(xVal[wendepunkte]), col = 4)
             }
             
             ###########################

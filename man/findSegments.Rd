@@ -5,7 +5,7 @@
 \title{Find Segments in the provided CN data}
 \usage{
 findSegments(data, ctrl, ctrlAll, statistic = "wilcoxon", plot = FALSE,
-    delta = 500, output = "diff", ylim = NULL, arrayType = "auto")
+  delta = 500, output = "diff", ylim = NULL, arrayType = "auto")
 }
 \arguments{
 \item{data}{CN data to evaluate}

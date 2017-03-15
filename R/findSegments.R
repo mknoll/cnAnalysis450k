@@ -70,12 +70,14 @@ findSegments <-
         
         ##Find segments
         patData <- NULL
+        
+        ct <- ctrl
+        ct <- ct[match(rownames(annoSorted), names(ct))]
+        ctAll <- ctrlAll
+        ctAll <- ctAll[match(rownames(annoSorted), rownames(ctAll)), ]
+        
         for (j in 1:length(data[1, ])) {
             #different patients
-            ct <- ctrl
-            ct <- ct[match(rownames(annoSorted), names(ct))]
-            ctAll <- ctrlAll
-            ctAll <- ctAll[match(rownames(annoSorted), rownames(ctAll)), ]
             da <- data[, j]
             da <- da[match(rownames(annoSorted), names(da))]
             smpName <- colnames(data)[j]
@@ -267,5 +269,142 @@ findSegments <-
             #plot(sampleSegments$mean, col=sampleSegments$chr)
             patData <- rbind.fill(patData, sampleSegments)
         }
+        return (patData)
+    }
+
+
+
+#' @title Find Segments in the provided CN data,
+#' fixed values and parallized
+#'
+#' @description
+#' Uses data from minfis getCN() function and normalizes 
+#' probe-wise against control CN data.
+#' Segments are identified with changepoints cpr.var() 
+#' function (BinSeg). Wilcoxon test + differences
+#'
+#' @param data CN data to evaluate
+#' @param ctrl CN data of controls, levels to test to (1 mean / median
+#'  over all ctrl samples)
+#' @param ctrlAll CN data of all control samples
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
+#'
+#' @return data containing chr, startCG, endCG, segmentmedian, -mean, 
+#' SD and samplename
+#'
+#' @import plyr
+#'
+#' @export
+findSegmentsFast <-
+    function(data,
+             ctrl,
+             ctrlAll,
+             arrayType="auto") {
+        print("### Find Segments in CN Data ...")
+        
+        ##get annotation
+        ## ggf cachen
+        if (arrayType=="auto") {
+            anno <- getAnnoData(determineArrayType(data))
+        } else {
+            anno <- getAnnoData(arrayType)
+        }
+        annoSorted <- anno[order(anno$chr, anno$pos), ]
+        
+        ## parallel
+        no_cores <- parallel::detectCores() - 1
+        no_cores <- ifelse(no_cores == 0, 1, no_cores)
+        doParallel::registerDoParallel(no_cores)
+        
+        ##Find segments
+        patData <- NULL
+        ct <- ctrl[match(rownames(annoSorted), names(ctrl))]
+        ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), ]
+        smp <- data[match(rownames(annoSorted), rownames(data)),]
+        
+        # Get cg Borders of Chromosomes
+        chrs <- paste("chr", 1:22, sep = "")
+        chBorder <- NULL
+        out <- foreach (ch=chrs) %dopar% {
+            subCh <- data.frame(anno[which(anno$chr == ch), ])
+            subCh <- subCh[order(subCh$pos), ]
+            vec <-
+                data.frame(
+                    chr = ch,
+                    start = rownames(subCh)[1],
+                    end = rownames(subCh)[length(subCh[, 1])],
+                    startI = which(rownames(smp) == rownames(subCh)[1]),
+                    endI = which(rownames(smp) == rownames(subCh)[length(subCh[, 1])])
+                )
+            vec
+        }
+        chBorder <- do.call(rbind, out)
+        rownames(chBorder) <- chBorder[, 1]
+        
+        for (j in 1:length(data[1, ])) {
+            smpName <- colnames(data)[j]
+            print(paste("Processing", smpName, "..."))
+            
+            #different patients
+            da <- smp[,j]
+            
+            sampleSegments <- NULL
+            ##splitpos
+            out <- foreach(ch=unique(chBorder$chr)) %dopar% {
+                from <- chBorder[ch,"startI"]
+                to <- chBorder[ch,"endI"]
+                
+                rat <- da[from:to] - ct[from:to]
+                namesRat <- names(da)[from:to]
+                
+                sel <- !is.na(rat) & !is.infinite(rat)
+                rat <- rat[sel]
+                namesRat <- namesRat[sel]
+                
+                ##find changepoints
+                res <- changepoint::cpt.var(rat, method = "BinSeg")
+                
+                ##calculate segment data
+                if (length(res@cpts) > 1) {
+                    ends <- res@cpts
+                    starts <- c(0, ends[1:(length(ends) - 1)]) + 1
+                    median <- c()
+                    for (pos in 1:length(starts)) {
+                        median <- c(median, 
+                                    median(rat[starts[pos]:ends[pos]]))
+                        ##statistics
+                        p.val <- wilcox.test(da[starts[pos]:ends[pos]], 
+                                            ctAll[starts[pos]:ends[pos]])$p.value
+                    }
+                    segDF <- NULL
+                } else {
+                    starts <- 1
+                    ends <- res@cpts
+                    median <- median(rat[starts:ends])
+                    p.val <-
+                            wilcox.test(da[starts:ends], 
+                                        ctAll[starts:ends])$p.value
+                }
+                segDF <- data.frame(
+                    chr = ch,
+                    startCG = namesRat[starts],
+                    #start=starts,
+                    endCG = namesRat[ends],
+                    #end=ends,
+                    median = median,
+                    smp = smpName,
+                    p.val = p.val
+                )
+                segDF
+            }
+            sampleSegments <- do.call(rbind, out)
+            
+            patData <- rbind.fill(patData, sampleSegments)
+        }
+        
+        doParallel::stopImplicitCluster()
+        
+        
         return (patData)
     }

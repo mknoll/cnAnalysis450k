@@ -5,7 +5,7 @@
 \title{Finding cutoffs}
 \usage{
 findCutoffs(data, zeichne = FALSE, ignoreNAs = FALSE, eps = 0.01,
-    proximity = c(0, 0))
+  proximity = c(0, 0))
 }
 \arguments{
 \item{data}{Inputdata}

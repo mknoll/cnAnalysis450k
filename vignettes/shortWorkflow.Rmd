@@ -41,8 +41,9 @@ samples <- scale(samples)
 
 
 ##Process data
+## ~15 sek
 candidatesDATA <-
-cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
+cnAnalysis450k::findSegmentsFast(samples[, , drop = FALSE], ctrl, ctrlAll)
 candidatesMATRIX <-
 cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.01)
 candidatesCUT <-
@@ -50,7 +51,6 @@ cnAnalysis450k::findCutoffs(candidatesMATRIX, proximity = c(2, 1))
 candidatesFINAL <-
 cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, effectsize =
 c(0.15, 0.1))
-
 
 ##Display
 anno_row <-
