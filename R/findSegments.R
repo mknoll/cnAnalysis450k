@@ -111,6 +111,7 @@ findSegments <-
                     median <- c()
                     mean <- c()
                     sd <- c()
+		    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))
