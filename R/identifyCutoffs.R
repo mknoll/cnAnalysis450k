@@ -53,7 +53,7 @@ findCutoffs <-
             outData <- NULL
             for (ch in levels(factor(chrR[, 1]))) {
                 print(paste("Find cutoffs:", ch))
-                chrDat <- data[which(chrR[, 1] == ch), ]
+                chrDat <- data[which(chrR[, 1] == ch), ,drop=FALSE]
                 outData <-
                     rbind.fill(outData,
                                 findCutoffsRun(chrDat, zeichne, ignoreNAs,
@@ -111,7 +111,6 @@ findCutoffsRun <-
                 hist(subD[i, ,drop=FALSE], breaks = 100)
             }
             
-            epsilon <- eps
             if (any(is.na(subD[i, ]))) {
                 tmpNA <- subD[i, ]
                 warning(paste(
@@ -137,8 +136,8 @@ findCutoffsRun <-
                 }
             }
             
-            minV <- min(subD[i, ], na.rm = TRUE) - epsilon
-            maxV <- max(subD[i, ], na.rm = TRUE) + epsilon
+            minV <- min(subD[i, ], na.rm = TRUE) - eps
+            maxV <- max(subD[i, ], na.rm = TRUE) + eps
             ##fit function
             df <- approxfun(density(subD[i, ], na.rm = TRUE))
             
@@ -322,7 +321,6 @@ findCutoffsRun <-
                 cutoffGainWP = assumedSepGainWP,
                 baseline = assumedBaseline
             )
-            
             groupsDATA <- rbind.fill(groupsDATA, vec)
         }
         cat("\n")
@@ -366,7 +364,6 @@ findCutoffsRunFast <-
         #find differing groups: row wise
         i<-0
         out <- foreach::foreach(i=1:length(subD[,1])) %dopar% {
-            epsilon <- eps
             cont <- TRUE
             if (any(is.na(subD[i, ]))) {
                 tmpNA <- subD[i, ]
@@ -394,8 +391,8 @@ findCutoffsRunFast <-
             }
             
             if (cont) {
-                minV <- min(subD[i, ], na.rm = TRUE) - epsilon
-                maxV <- max(subD[i, ], na.rm = TRUE) + epsilon
+                minV <- min(subD[i, ], na.rm = TRUE) - eps
+                maxV <- max(subD[i, ], na.rm = TRUE) + eps
                 ##fit function
                 df <- approxfun(density(subD[i, ], na.rm = TRUE))
                 
