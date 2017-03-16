@@ -110,13 +110,13 @@ findSegments <-
                 res <- changepoint::cpt.var(rat, method = "BinSeg")
                 
                 ##calculate segment data
+                p.val <- c()
                 if (length(res@cpts) > 1) {
                     ends <- res@cpts
                     starts <- c(0, ends[1:(length(ends) - 1)]) + 1
                     median <- c()
                     mean <- c()
                     sd <- c()
-                    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))
@@ -387,11 +387,11 @@ findSegmentsFast <-
                 res <- changepoint::cpt.var(rat, method = "BinSeg")
                 
                 ##calculate segment data
+                p.val <- c()
                 if (length(res@cpts) > 1) {
                     ends <- res@cpts
                     starts <- c(0, ends[1:(length(ends) - 1)]) + 1
                     median <- c()
-                    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))

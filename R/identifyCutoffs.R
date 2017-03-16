@@ -180,10 +180,11 @@ findCutoffsRun <-
             if (l >= 3) {
                 l1=l-1
                 wendepunkte <- c(
-                which(d2[-c(1:2)] > d2[-c(1,l)] &
-                    d2[-c(1:2)] < d2[-c(l1,l)])+1,
-                which(d2[-c(1:2)] < d2[-c(1,l)] & 
-                    d2[-c(1:2)] > d2[-c(l1,l)]))+1
+                    which(d2[-c(l,l1)]> d2[-c(1,l)] & 
+                        d2[-c(1:2)] > d2[-c(1,l)]),
+                    which(d2[-c(l,l1)]< d2[-c(1,l)] & 
+                        d2[-c(1:2)] < d2[-c(1,l)])
+		)+1
             }
             if (zeichne) {
                 points(xVal[wendepunkte], df(xVal[wendepunkte]), col = 4)
@@ -424,10 +425,11 @@ findCutoffsRunFast <-
                 if (l >= 3) {
                     l1=l-1
                     wendepunkte <- c(
-                    which(d2[-c(1:2)] > d2[-c(1,l)] & 
-                        d2[-c(1:2)] < d2[-c(l1,l)])+1,
-                    which(d2[-c(1:2)] < d2[-c(1,l)] & 
-                        d2[-c(1:2)] > d2[-c(l1,l)]))+1
+                        which(d2[-c(l,l1)]> d2[-c(1,l)] & 
+                            d2[-c(1:2)] > d2[-c(1,l)]),
+                        which(d2[-c(l,l1)]< d2[-c(1,l)] & 
+                            d2[-c(1:2)] < d2[-c(1,l)])
+		    )+1
                 }
                 
                 
