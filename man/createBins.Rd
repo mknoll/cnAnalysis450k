@@ -5,7 +5,7 @@
 \title{Bin CN data}
 \usage{
 createBins(data, ctrl, ctrlAll, statistic = "wilcoxon", binsize = 2e+05,
-    output = "diff", arrayType = "auto", noCores = -1)
+  output = "diff", arrayType = "auto", noCores = -1)
 }
 \arguments{
 \item{data}{sample data}
@@ -40,4 +40,3 @@ ctrl <- data[,5] # apply(ctrlAll, 1, "median")
 data <- data[,1,drop=FALSE]
 createBins(data,ctrl,ctrlAll, binsize=50000000, noCores=2)[1:3,]
 }
-

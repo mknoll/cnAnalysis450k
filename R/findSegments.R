@@ -20,7 +20,7 @@
 #' determine the array type (450k, EPIC)
 #'
 #' @return data containing chr, startCG, endCG, segmentmedian, -mean, 
-#' SD and samplename
+#' p-value, SD and samplename
 #'
 #' @import plyr
 #'
@@ -42,18 +42,19 @@ findSegments <-
             output = "diff",
             ylim = NULL,
             arrayType="auto") {
+        ##check if fast version can be used
+        if (!plot && output == "diff" && statistic=="wilcoxon") {
+            return (findSegmentsFast(data, ctrl, ctrlAll))
+        }
+
         print("### Find Segments in CN Data ...")
-        
-	##check if fast version can be used
-	if (!plot && output == "diff" && statistic=="wilcoxon") {
-	    return (findSegmentsFast(data, ctrl, ctrlAll))
-	}
 
         ##get annotation
         if (arrayType=="auto") {
-            anno <- getAnnoData(determineArrayType(data))
+            anno <- cnAnalysis450k::getAnnoData(
+                cnAnalysis450k::determineArrayType(data))
         } else {
-            anno <- getAnnoData(arrayType)
+            anno <- cnAnalysis450k::getAnnoData(arrayType)
         }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
         
@@ -74,17 +75,15 @@ findSegments <-
         rownames(chBorder) <- chBorder[, 1]
         
         ##Find segments
+        ct <- ctrl[match(rownames(annoSorted), names(ctrl))]
+        ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), 
+            ,drop=F]
+        smp <- data[match(rownames(annoSorted), rownames(data)),,drop=F]
         patData <- NULL
-        
-        ct <- ctrl
-        ct <- ct[match(rownames(annoSorted), names(ct))]
-        ctAll <- ctrlAll
-        ctAll <- ctAll[match(rownames(annoSorted), rownames(ctAll)), ]
         
         for (j in 1:length(data[1, ])) {
             #different patients
-            da <- data[, j]
-            da <- da[match(rownames(annoSorted), names(da))]
+            da <- smp[, j]
             smpName <- colnames(data)[j]
             print(paste("Processing", smpName, "..."))
             
@@ -116,7 +115,7 @@ findSegments <-
                     median <- c()
                     mean <- c()
                     sd <- c()
-		    p.val <- c()
+                    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))
@@ -278,6 +277,40 @@ findSegments <-
         return (patData)
     }
 
+#' @title 
+#' Find Segments in the provided CN data for set parameters
+#'
+#' @description
+#' Uses data from minfis getCN() function and normalizes 
+#' probe-wise against control CN data.
+#' Segments are identified with changepoints cpr.var() 
+#' function (BinSeg)
+#' Differes compared to findSegments in:
+#' - no plotting
+#' - only wilcoxon tests
+#' - differences are calculated
+#' - only limited set of return values 
+#'
+#' @param data CN data to evaluate
+#' @param ctrl CN data of controls, levels to test to (1 mean / median
+#'  over all ctrl samples)
+#' @param ctrlAll CN data of all control samples
+#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
+#' determine the array type (450k, EPIC)
+#'
+#' @return data containing chr, startCG, endCG, segmentmedian, p-value, 
+#' samplename
+#'
+#' @import plyr
+#'
+#' @export
+#'
+#' @examples
+#' norm <- minfi::getCN(minfi::preprocessRaw(minfiData::RGsetEx))
+#' ctrlAll <- norm[,5,drop=FALSE]
+#' ctrl <- norm[,4] #ctrl <- apply(ctrlAll, 1, "median")
+#' samples <- norm[,1,drop=FALSE]
+#' findSegmentsFast(samples,ctrl, ctrlAll)[1:4,]
 findSegmentsFast <-
     function(data,
             ctrl,
@@ -289,7 +322,7 @@ findSegmentsFast <-
         ## ggf cachen
         if (arrayType=="auto") {
             anno <- cnAnalysis450k::getAnnoData(
-	    cnAnalysis450k::determineArrayType(data))
+            cnAnalysis450k::determineArrayType(data))
         } else {
             anno <- cnAnalysis450k::getAnnoData(arrayType)
         }
@@ -303,12 +336,14 @@ findSegmentsFast <-
         ##Find segments
         patData <- NULL
         ct <- ctrl[match(rownames(annoSorted), names(ctrl))]
-        ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), ]
-        smp <- data[match(rownames(annoSorted), rownames(data)),]
+        ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), 
+            ,drop=F]
+        smp <- data[match(rownames(annoSorted), rownames(data)),,drop=F]
         
         # Get cg Borders of Chromosomes
         chrs <- paste("chr", 1:22, sep = "")
         chBorder <- NULL
+        ch <- c()
         out <- foreach (ch=chrs) %dopar% {
             subCh <- data.frame(anno[which(anno$chr == ch), ])
             subCh <- subCh[order(subCh$pos), ]
@@ -355,7 +390,7 @@ findSegmentsFast <-
                     ends <- res@cpts
                     starts <- c(0, ends[1:(length(ends) - 1)]) + 1
                     median <- c()
-		    p.val <- c()
+                    p.val <- c()
                     for (pos in 1:length(starts)) {
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))

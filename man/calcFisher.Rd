@@ -31,4 +31,3 @@ group <- c(1,2,2)
 calcFisher(data,group,FALSE)
 calcFisher(data,group,TRUE)
 }
-

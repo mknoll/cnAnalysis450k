@@ -25,4 +25,3 @@ ctrl <- norm[,4]
 candidatesDATA <- runConumee(samples,ctrl,"segments")
 createConumeeMatrix(candidatesDATA)[1:3,,drop=FALSE]
 }
-

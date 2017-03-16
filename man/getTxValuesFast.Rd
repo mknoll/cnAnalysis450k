@@ -45,4 +45,3 @@ ctrl <- apply(ctrlAll, 1, "median")
 names(ctrl) <- rownames(data)
 getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 }
-

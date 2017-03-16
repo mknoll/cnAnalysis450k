@@ -5,7 +5,7 @@
 \title{Get TX CNV values}
 \usage{
 getTxValues(data, ctrl, ctrlAll, tx, output = "diff",
-    statistic = "wilcoxon", op = "median", arrayType = "auto")
+  statistic = "wilcoxon", op = "median", arrayType = "auto")
 }
 \arguments{
 \item{data}{input data}
@@ -53,4 +53,3 @@ ctrl <- c(0.74, -3.6, -2.8, -1.67)
 names(ctrl) <- rownames(data)
 getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 }
-

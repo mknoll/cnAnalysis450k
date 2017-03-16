@@ -25,4 +25,3 @@ identified cutoffs
 Analyzes row-wise histograms by selecting the global maximum (0),
 as well as one further local maximum right (+) and left (-)
 }
-

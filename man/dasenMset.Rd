@@ -27,4 +27,3 @@ u <- minfi::getUnmeth(minfiData::MsetEx[,1])
 ot <- c(rep("I",200), rep("II", (length(u[,1])-200)))
 dasenMset(m,u,ot)
 }
-

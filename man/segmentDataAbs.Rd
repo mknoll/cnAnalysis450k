@@ -34,4 +34,3 @@ rownames(candMatrix) <- c(
 )
 segmentDataAbs(candMatrix, upper=0.1, lower=-0.15)
 }
-

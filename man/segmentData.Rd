@@ -42,4 +42,3 @@ baseline=c(0.01,0.01,0.01,0.01)
 )
 segmentData(candMatrix, cutoffs)
 }
-

@@ -20,4 +20,3 @@ Tries to determine the array type (EPIC, 450k)
 \examples{
 determineArrayType(minfiData::MsetEx)
 }
-

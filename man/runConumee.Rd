@@ -31,4 +31,3 @@ createConumeeMatrix examples")
 #ctrl <- norm[,4]
 #runConumee(data,ctrl,"segments")
 }
-

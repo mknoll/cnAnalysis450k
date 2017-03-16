@@ -7,8 +7,8 @@ Author: Maximilian Knoll
 Maintainer: Maximilian Knoll <m.knoll@dkfz.de>
 Description: Normalization, segmentation and aggregation of Illumina methylation array copy number data (450k + EPIC).
 License: GPL-3
-RoxygenNote: 5.0.1
-Imports:  AnnotationDbi,
+RoxygenNote: 6.0.1
+Imports: AnnotationDbi,
     changepoint,
     conumee,
     fastmatch,
