@@ -5,7 +5,7 @@
 \title{Get TX CNV values}
 \usage{
 getTxValues(data, ctrl, ctrlAll, tx, output = "diff",
-  statistic = "wilcoxon", op = "median", arrayType = "auto")
+    statistic = "wilcoxon", op = "median", arrayType = "auto")
 }
 \arguments{
 \item{data}{input data}

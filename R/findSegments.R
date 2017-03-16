@@ -282,9 +282,9 @@ findSegments <-
 
 findSegmentsFast <-
     function(data,
-             ctrl,
-             ctrlAll,
-             arrayType="auto") {
+            ctrl,
+            ctrlAll,
+            arrayType="auto") {
         print("### Find Segments in CN Data ...")
         
         ##get annotation
@@ -319,8 +319,10 @@ findSegmentsFast <-
                     chr = ch,
                     start = rownames(subCh)[1],
                     end = rownames(subCh)[length(subCh[, 1])],
-                    startI = which(rownames(smp) == rownames(subCh)[1]),
-                    endI = which(rownames(smp) == rownames(subCh)[length(subCh[, 1])])
+                    startI = which(rownames(smp) 
+                        == rownames(subCh)[1]),
+                    endI = which(rownames(smp) 
+                        == rownames(subCh)[length(subCh[, 1])])
                 )
             vec
         }
@@ -360,8 +362,10 @@ findSegmentsFast <-
                         median <- c(median, 
                                     median(rat[starts[pos]:ends[pos]]))
                         ##statistics
-                        p.val <- c(p.val, wilcox.test(da[starts[pos]:ends[pos]], 
-                                            ctAll[starts[pos]:ends[pos]])$p.value)
+                        p.val <- c(p.val, 
+                            wilcox.test(
+                                da[starts[pos]:ends[pos]], 
+                                ctAll[starts[pos]:ends[pos]])$p.value)
                     }
                     segDF <- NULL
                 } else {

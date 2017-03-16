@@ -5,7 +5,7 @@
 \title{Bin CN data}
 \usage{
 createBins(data, ctrl, ctrlAll, statistic = "wilcoxon", binsize = 2e+05,
-  output = "diff", arrayType = "auto", noCores = -1)
+    output = "diff", arrayType = "auto", noCores = -1)
 }
 \arguments{
 \item{data}{sample data}
