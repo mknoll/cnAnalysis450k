@@ -45,7 +45,7 @@ findSegments <-
         print("### Find Segments in CN Data ...")
         
 	##check if fast version can be used
-	if (!plot && output = "diff" && statistic="wilcoxon") {
+	if (!plot && output == "diff" && statistic=="wilcoxon") {
 	    return (findSegmentsFast(data, ctrl, ctrlAll))
 	}
 
