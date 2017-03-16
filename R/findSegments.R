@@ -77,8 +77,9 @@ findSegments <-
         ##Find segments
         ct <- ctrl[match(rownames(annoSorted), names(ctrl))]
         ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), 
-            ,drop=F]
-        smp <- data[match(rownames(annoSorted), rownames(data)),,drop=F]
+            ,drop=FALSE]
+        smp <- data[match(rownames(annoSorted), rownames(data)),
+            ,drop=FALSE]
         patData <- NULL
         
         for (j in 1:length(data[1, ])) {
@@ -337,8 +338,8 @@ findSegmentsFast <-
         patData <- NULL
         ct <- ctrl[match(rownames(annoSorted), names(ctrl))]
         ctAll <- ctrlAll[match(rownames(annoSorted), rownames(ctrlAll)), 
-            ,drop=F]
-        smp <- data[match(rownames(annoSorted), rownames(data)),,drop=F]
+            ,drop=FALSE]
+        smp <- data[match(rownames(annoSorted), rownames(data)),,drop=FALSE]
         
         # Get cg Borders of Chromosomes
         chrs <- paste("chr", 1:22, sep = "")
