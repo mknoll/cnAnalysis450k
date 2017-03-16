@@ -44,6 +44,13 @@ findSegments <-
             arrayType="auto") {
         print("### Find Segments in CN Data ...")
         
+	##check if fast version can be used
+	if (!plot &&  
+	    output = "diff" && 
+	    statistic="wilcoxon") {
+	    return (findSegmentsFast(data, ctrl, ctrlAll))
+	}
+
         ##get annotation
         if (arrayType=="auto") {
             anno <- getAnnoData(determineArrayType(data))
@@ -273,30 +280,6 @@ findSegments <-
         return (patData)
     }
 
-
-
-#' @title Find Segments in the provided CN data,
-#' fixed values and parallized
-#'
-#' @description
-#' Uses data from minfis getCN() function and normalizes 
-#' probe-wise against control CN data.
-#' Segments are identified with changepoints cpr.var() 
-#' function (BinSeg). Wilcoxon test + differences
-#'
-#' @param data CN data to evaluate
-#' @param ctrl CN data of controls, levels to test to (1 mean / median
-#'  over all ctrl samples)
-#' @param ctrlAll CN data of all control samples
-#' @param arrayType "auto","450k", "EPIC"; auto -> tries to automatically 
-#' determine the array type (450k, EPIC)
-#'
-#' @return data containing chr, startCG, endCG, segmentmedian, -mean, 
-#' SD and samplename
-#'
-#' @import plyr
-#'
-#' @export
 findSegmentsFast <-
     function(data,
              ctrl,

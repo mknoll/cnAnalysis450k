@@ -43,7 +43,7 @@ samples <- scale(samples)
 ##Process data
 ## ~15 sek
 candidatesDATA <-
-cnAnalysis450k::findSegmentsFast(samples[, , drop = FALSE], ctrl, ctrlAll)
+cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
 candidatesMATRIX <-
 cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.01)
 candidatesCUT <-
