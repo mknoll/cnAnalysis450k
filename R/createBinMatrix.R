@@ -1,27 +1,26 @@
 #' @title Create Matrix from calculated Bins
 #' 
+#' @import plyr
+#' 
 #' @export
-createBinMatrix <- function(data, val) {
-    ##create empty matrix
-    m <- matrix(ncol=length(levels(factor(data$smp))), 
-                nrow=length(levels(factor(data$startCG))))
-    colnames(m) <- levels(factor(data$smp))
-    rownames(m) <- levels(factor(data$startCG))
+createBinMatrix <- function(data, pval) {    
+    ## use parallelization
+    no_cores <- parallel::detectCores() - 1
+    no_cores <- ifelse(no_cores == 0, 1, no_cores)
+    doParallel::registerDoParallel(no_cores)
     
-    for (p in colnames(m)) {
-        subCh <- data[which(data$smp == p),val]
-        names(subCh) <- data$startCG[which(data$smp == p)]
-        subCh <- subCh[fastmatch::fmatch(rownames(m), names(subCh))]
-        m[,p] <- subCh
+    out <- foreach (i=1:length(data)) %dopar% {
+        ##select rows for which p <= pval
+        sel <- apply(data[[i]]$median, 1, function(x) any(x$p.val <= pval))
+        subD <- data[[i]]$median[sel,]
+        rownames(subD) <- paste(data[[i]]$chr[sel], 
+                                data[[i]]$startCGs[sel],
+                                rownames(data[[i]]$median)[sel], 
+                                sep=":")
+        subD
     }
     
-    ##add position/ chrom data
-    anno <- getAnnoData(determineArrayType(data))
-    anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22,sep=""), "chrX", "chrY"))
-    anno <- anno[which(rownames(anno) %in% rownames(m)),]
-    anno <- anno[order(anno$chr, anno$pos),]
-    m <- m[fastmatch::fmatch(rownames(anno), rownames(m)),]
-    rownames(m) <- paste(rownames(m), anno$chr, anno$pos, sep=":")
+    stopImplicitCluster()
     
-    return (m)
+    return (do.call(rbind, out))
 }

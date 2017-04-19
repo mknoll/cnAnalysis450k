@@ -76,7 +76,7 @@ pheatmap::pheatmap(candidatesFINAL,
 candidatesDATA <-
     cnAnalysis450k::createBinsFast(samples, ctrl,  ctrlAll, binsize = 200000)
 candidatesMATRIX <- 
-    cnAnalysis450k::createBinMatrix(candidatesDATA[which(candidatesDATA$p.val <= 1), ], "median")
+    cnAnalysis450k::createBinMatrix(candidatesDATA, pval=1)
 candidatesCUT <-
     cnAnalysis450k::findCutoffs(candidatesMATRIX, ignoreNAs=T)
 candidatesFINAL <-

@@ -221,7 +221,8 @@ createBinsFast <- function(data,
     doParallel::registerDoParallel(no_cores)
     
     ##get annotation
-    anno <- getAnnoData(determineArrayType(data))
+    anno <- cnAnalysis450k::getAnnoData(
+        cnAnalysis450k::determineArrayType(data))
     anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22, sep=""), "chrX", "chrY"))
     annoSorted <- anno[order(anno$chr, anno$pos), ]
     
@@ -255,101 +256,96 @@ createBinsFast <- function(data,
     chBorder <- do.call(rbind, out)
     rownames(chBorder) <- chBorder[, 1]
     
-    ##Calculate Bin-Values
-    patData <- NULL
-    for (j in 1:length(data[1, ])) {
-        #different patients
-        da <- data[, j]
-        names(da) <- rownames(data)
-        smpName <- colnames(data)[j]
-                
-        ##splitpos
-        sampleBins <- 
-            foreach::foreach(ch=levels(factor(chBorder$chr))) %dopar% {
-                cat("\r",smpName,": #", ch, "             ")
-                subCh <-
-                    data.frame(anno[which(anno$chr == ch), c("pos", "chr")])
-                subCh <- subCh[order(subCh$pos), ]
-                
-                fromPos <- chBorder[ch, "startPos"]
-                toPos <- chBorder[ch, "endPos"]
-                
-                ## find bin-borders
-                starts <- fromPos
-                ends <- c()
-                z1 <- ceiling(fromPos / binsize)
-                z2 <- floor(toPos / binsize)
-                if (z2 > z1) { 
-                    for (z in z1:z2) {
-                        starts <- c(starts, z * binsize)
-                        ends <- c(ends, z * binsize - 1)
-                    }
-                }
-                ends <- c(ends, toPos)
-                
-                ## caluclate bin values
-                startCgs <- c()
-                endCgs <- c()
-                median <- c()
-                p.val <- c()
-                ##use for fastmatch
-                namesDa <- names(da)
-                namesCt <- names(ct)
-                namesCtAll <- rownames(ctAll)
-                for (p in 1:length(starts)) {
-                    daTmp <-
-                        da[fastmatch::fmatch(
-                            rownames(subCh)[subCh$pos >= starts[p] &
-                                                subCh$pos <= ends[p]], namesDa)]
-                    ctTmp <-
-                        ct[fastmatch::fmatch(
-                            rownames(subCh)[subCh$pos >= starts[p] &
-                                                subCh$pos <= ends[p]], namesCt)]
-                    ctAllTmp <-
-                        ctAll[fastmatch::fmatch(
-                            rownames(subCh)[subCh$pos >= starts[p] &
-                                                subCh$pos <= ends[p]], namesCtAll), ]
-                    
-                    if (length(daTmp) == 0 || length(ctTmp) == 0) {
-                        next
-                    }
-                    
-                    ## get cg-IDs
-                    rnTmp <-
-                        rownames(subCh)[subCh$pos >= starts[p] & 
-                                            subCh$pos <= ends[p]]
-                    startCgs <- c(startCgs, rnTmp[1])
-                    endCgs <- c(endCgs, rnTmp[length(rnTmp)])
-                    
-                    ##difference?
-                    rat <- daTmp - ctTmp
-                    rat <- rat[!is.na(rat) & !is.infinite(rat)]
-                    
-                    median <- c(median, median(rat))
-
-                    ##statistics
-                    #u test
-                    p.val <-
-                        c(p.val,
-                          wilcox.test(daTmp, 
-                                      ctAllTmp)$p.value)
-                }
-                
-                chrDF <- data.frame(
-                    chr = ch,
-                    startCG = startCgs,
-                    #start=starts,
-                    endCG = endCgs,
-                    #end=ends,
-                    median = median,
-                    smp = smpName,
-                    p.val = p.val,
-                    statistic = "wilcoxon"
-                )
-            }
-        patData <- rbind(patData, do.call(rbind, sampleBins))
-    }
     
+    ##Calculate bins per chromosome
+    patData <- foreach::foreach(ch=levels(factor(chBorder$chr))) %dopar% {
+        cat("\r#", ch, "             ")
+        subCh <- data.frame(anno[which(anno$chr == ch), c("pos", "chr")])
+        subCh <- subCh[order(subCh$pos), ]
+        
+        fromPos <- chBorder[ch, "startPos"]
+        toPos <- chBorder[ch, "endPos"]
+        
+        ## find bin-borders
+        starts <- fromPos
+        ends <- c()
+        z1 <- ceiling(fromPos / binsize)
+        z2 <- floor(toPos / binsize)
+        if (z2 > z1) { 
+            for (z in z1:z2) {
+                starts <- c(starts, z * binsize)
+                ends <- c(ends, z * binsize - 1)
+            }
+        }
+        ends <- c(ends, toPos)
+        
+        ## caluclate bin values
+        startCgs <- c()
+        endCgs <- c()
+        
+        ### medians
+        medians <- matrix(ncol=length(colnames(data)),
+                         nrow=length(starts), NA)
+        colnames(medians) <- colnames(data)
+        
+        ##p-values / wilcoxon
+        pvals <- matrix(ncol=length(colnames(data)),
+                        nrow=length(starts), NA)
+        colnames(pvals) <- colnames(data)
+        
+        namesDa <- rownames(data)
+        rmRows <- c()
+        
+        for (p in 1:length(starts)) {
+            print(p)
+            mtch <- fastmatch::fmatch(
+                rownames(subCh)[subCh$pos >= starts[p] &
+                                    subCh$pos <= ends[p]], namesDa)
+            
+            daTmp <- data[mtch,]
+            ctTmp <- ct[mtch]
+            ctAllTmp <- ctAll[mtch,]
+            
+            if (length(daTmp) == 0 || length(ctTmp) == 0) {
+                rmRows <- c(rmRows, p)
+                next
+            }
+            
+            ## get cg-IDs
+            startCgs <- c(startCgs, rownames(subCh)[which(subCh$pos >= starts[p])][1])
+            
+            ##difference?
+            rat <- daTmp - ctTmp
+            rat[is.infinite(rat)] <- NA 
+            if (length(rat) > length(colnames(data))) {
+                medians[p, ] <- apply(rat, 2, "median")
+            } else {
+                medians[p, ] <- rat
+            }
+            
+            ##statistics
+            if (length(rat) > length(colnames(data))) {
+                pvals[p, ] <- apply(daTmp, 2, function(x) wilcox.test(x, ctAllTmp)$p.value)
+            } else {
+                pvals[p, ] <- NA
+            }
+        }
+        medians <- medians[-rmRows,]
+        pvals <- pvals[-rmRows,]
+        rownames(medians) <- startCgs
+        rownames(pvals) <- startCgs
+        
+        chrDF <- list(
+            chr=ch, 
+            startCGs=startCgs,
+            median=medians,
+            p.val=pvals,
+            statistic="wilcoxon",
+            type="diff"
+        )
+        chrDF
+    }
+
     stopImplicitCluster()
     
     return(patData)

@@ -4,6 +4,6 @@
 \alias{createBinMatrix}
 \title{Create Matrix from calculated Bins}
 \usage{
-createBinMatrix(data, val)
+createBinMatrix(data, pval)
 }
 
