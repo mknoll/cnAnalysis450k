@@ -332,6 +332,7 @@ createBinsFast <- function(data,
         medians <- medians[-rmRows,]
         pvals <- pvals[-rmRows,]
         rownames(medians) <- startCgs
+        rownames(pvals) <- starts[-rmRows]
         
         chrDF <- list(
             chr=ch, 

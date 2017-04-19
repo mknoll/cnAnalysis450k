@@ -13,7 +13,7 @@ createBinMatrix <- function(data, pval) {
         ##select rows for which p <= pval
         sel <- apply(data[[i]]$p.val, 1, function(x) any(x <= pval))
         subD <- data[[i]]$median[sel,]
-        rownames(subD) <- paste(data[[i]]$ch[sel], 
+        rownames(subD) <- paste(data[[i]]$chr, 
                                 data[[i]]$startCGs[sel],
                                 rownames(data[[i]]$p.val)[sel], 
                                 sep=":")
