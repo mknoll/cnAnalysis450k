@@ -11,11 +11,11 @@ createBinMatrix <- function(data, pval) {
     
     out <- foreach (i=1:length(data)) %dopar% {
         ##select rows for which p <= pval
-        sel <- apply(data[[i]]$median, 1, function(x) any(x$p.val <= pval))
+        sel <- apply(data[[i]]$p.val, 1, function(x) any(x <= pval))
         subD <- data[[i]]$median[sel,]
-        rownames(subD) <- paste(data[[i]]$chr[sel], 
+        rownames(subD) <- paste(data[[i]]$ch[sel], 
                                 data[[i]]$startCGs[sel],
-                                rownames(data[[i]]$median)[sel], 
+                                rownames(data[[i]]$p.val)[sel], 
                                 sep=":")
         subD
     }

@@ -297,7 +297,6 @@ createBinsFast <- function(data,
         rmRows <- c()
         
         for (p in 1:length(starts)) {
-            print(p)
             mtch <- fastmatch::fmatch(
                 rownames(subCh)[subCh$pos >= starts[p] &
                                     subCh$pos <= ends[p]], namesDa)
@@ -333,7 +332,6 @@ createBinsFast <- function(data,
         medians <- medians[-rmRows,]
         pvals <- pvals[-rmRows,]
         rownames(medians) <- startCgs
-        rownames(pvals) <- startCgs
         
         chrDF <- list(
             chr=ch, 
