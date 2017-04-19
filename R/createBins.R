@@ -298,6 +298,7 @@ createBinsFast <- function(data,
         rmRows <- c()
         
         for (p in 1:length(starts)) {
+            print(paste(ch, p))
             mtch <- fastmatch::fmatch(
                 rownames(subCh)[subCh$pos >= starts[p] &
                                     subCh$pos <= ends[p]], namesDa)
@@ -330,10 +331,13 @@ createBinsFast <- function(data,
                 pvals[p, ] <- NA
             }
         }
-        medians <- medians[-rmRows,]
-        pvals <- pvals[-rmRows,]
+        
+        if (length(rmRows) > 0) {
+            medians <- medians[-rmRows,]
+            pvals <- pvals[-rmRows,]
+            rownames(pvals) <- starts[-rmRows]
+        }
         rownames(medians) <- startCgs
-        rownames(pvals) <- starts[-rmRows]
         
         chrDF <- list(
             chr=ch, 
@@ -346,7 +350,7 @@ createBinsFast <- function(data,
         chrDF
     }
 
-    stopImplicitCluster()
+    doParallel::stopImplicitCluster()
     
     return(patData)
 }
