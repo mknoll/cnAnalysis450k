@@ -298,7 +298,6 @@ createBinsFast <- function(data,
         rmRows <- c()
         
         for (p in 1:length(starts)) {
-            print(paste(ch, p))
             mtch <- fastmatch::fmatch(
                 rownames(subCh)[subCh$pos >= starts[p] &
                                     subCh$pos <= ends[p]], namesDa)
