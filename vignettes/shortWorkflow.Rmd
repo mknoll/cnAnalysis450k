@@ -74,7 +74,7 @@ pheatmap::pheatmap(candidatesFINAL,
 ```{r}
 ##Process data
 candidatesDATA <-
-    cnAnalysis450k::createBinsFast(samples, ctrl,  ctrlAll, binsize = 200000)
+    cnAnalysis450k::createBinsFast(samples, ctrl,  ctrlAll, binsize = 500000)
 candidatesMATRIX <- 
     cnAnalysis450k::createBinMatrix(candidatesDATA, pval=1)
 candidatesCUT <-
@@ -85,12 +85,11 @@ candidatesFINAL <-
 
 
 ##Display
-candidatesFINAL <- read.csv("~/phd/test.csv", row.names=1)
 anno_row <- data.frame(do.call(rbind, strsplit(rownames(candidatesFINAL), ":")))
-colnames(anno_row) <- c("startCG", "chr", "pos")
+colnames(anno_row) <- c("chr", "startCG",  "pos")
 rownames(anno_row) <- rownames(candidatesFINAL)
-pheatmap::pheatmap(candidatesFINAL, annotation_row=anno_row[,"chr",drop=F],
-                   cluster_rows = FALSE, cluster_cols=FALSE)
+pheatmap::pheatmap(candidatesFINAL[which(anno_row$chr=="chr19"),], annotation_row=anno_row[,"chr",drop=F],
+                   cluster_rows = FALSE, cluster_cols=FALSE, show_rownames=F)
 ```
 
 
@@ -98,7 +97,20 @@ pheatmap::pheatmap(candidatesFINAL, annotation_row=anno_row[,"chr",drop=F],
 ## Calculate Transcript / Gene Alterations 
 
 ```{r}
+## All transcripts
+tx <-
+    GenomicFeatures::transcripts(
+        TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)$tx_name
 
+candidatesDATA <- 
+    cnAnalysis450k::getTxValuesFast(samples, ctrl, ctrlAll, tx)
+candidatesMATRIX <-
+    candidatesDATA$data[which(candidatesDATA$p.val <= 0.05), ]
+candidatesCUT <-
+    cnAnalysis450k::findCutoffs(candidatesMATRIX, ignoreNAs=T)
+candidatesFINAL <-
+    cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, effectsize =
+                                    c(0.05, 0.05))
 
 ```
 

@@ -208,7 +208,8 @@ createBins <-
     }
 
 
-#' @title Faster binning of CN data
+#' @title Fast bin calculation of CN data (fixed parameters)
+#' 
 #' 
 #' @export
 createBinsFast <- function(data,
