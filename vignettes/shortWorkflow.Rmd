@@ -38,29 +38,67 @@ ctrl <- apply(ctrlAll, 1, "median")
 samples <- normData[,4:6]
 samples[is.infinite(samples)] <- NA
 samples <- scale(samples)
+```
 
+## Calculate and display Segment-Alterations
 
+```{r}
 ##Process data
 ## ~15 sek
 candidatesDATA <-
-cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
+    cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
 candidatesMATRIX <-
-cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.01)
+    cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.01)
 candidatesCUT <-
-cnAnalysis450k::findCutoffs(candidatesMATRIX, proximity = c(2, 1))
+    cnAnalysis450k::findCutoffs(candidatesMATRIX, proximity = c(2, 1))
 candidatesFINAL <-
-cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, effectsize =
-c(0.15, 0.1))
+    cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, effectsize =
+                                    c(0.15, 0.1))
+
 
 ##Display
 anno_row <-
-data.frame(do.call(rbind, strsplit(rownames(candidatesFINAL), ":")))
+    data.frame(do.call(rbind, strsplit(rownames(candidatesFINAL), ":")))
 rownames(anno_row) <- rownames(candidatesFINAL)
 colnames(anno_row) <- c("Chromosome", "Startpos")
 anno_row$Chromosome <-
-factor(anno_row$Chromosome, levels = paste("chr", 1:22, sep = ""))
+    factor(anno_row$Chromosome, levels = paste("chr", 1:22, sep = ""))
 pheatmap::pheatmap(candidatesFINAL,
-annotation_row = anno_row[, "Chromosome", drop = FALSE],
-cluster_rows = FALSE)
+                   annotation_row = anno_row[, "Chromosome", drop = FALSE],
+                   cluster_rows = FALSE)
+```
+
+
+## Calculate Bin-Alterations
+
+```{r}
+##Process data
+candidatesDATA <-
+    cnAnalysis450k::createBinsFast(samples, ctrl,  ctrlAll, binsize = 200000)
+candidatesMATRIX <- 
+    cnAnalysis450k::createBinMatrix(candidatesDATA[which(candidatesDATA$p.val <= 1), ], "median")
+candidatesCUT <-
+    cnAnalysis450k::findCutoffs(candidatesMATRIX, ignoreNAs=T)
+candidatesFINAL <-
+    cnAnalysis450k::segmentData(candidatesMATRIX, candidatesCUT, 
+                                effectsize = c(0.05, 0.05))
+
+
+##Display
+candidatesFINAL <- read.csv("~/phd/test.csv", row.names=1)
+anno_row <- data.frame(do.call(rbind, strsplit(rownames(candidatesFINAL), ":")))
+colnames(anno_row) <- c("startCG", "chr", "pos")
+rownames(anno_row) <- rownames(candidatesFINAL)
+pheatmap::pheatmap(candidatesFINAL, annotation_row=anno_row[,"chr",drop=F],
+                   cluster_rows = FALSE, cluster_cols=FALSE)
+```
+
+
+
+## Calculate Transcript / Gene Alterations 
+
+```{r}
+
+
 ```
 

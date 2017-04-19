@@ -39,7 +39,6 @@ createBins <-
             output = "diff",
             arrayType="auto",
             noCores=-1) {
-        warning("Might be unstable!")
         if (noCores == -1) {
             no_cores <- parallel::detectCores() - 1
             no_cores <- ifelse(no_cores == 0, 1, no_cores)
@@ -56,23 +55,29 @@ createBins <-
         } else {
             anno <- getAnnoData(arrayType)
         }
+        anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22, sep=""), "chrX", "chrY"))
         annoSorted <- anno[order(anno$chr, anno$pos), ]
         
         # Get cg Borders of Chromosomes
         chrs <- paste("chr", 1:22, sep = "")
         chBorder <- NULL
-        for (ch in chrs) {
+        ch <- c()
+        out <- foreach (ch=chrs) %dopar% {
             subCh <- data.frame(anno[which(anno$chr == ch), ])
             subCh <- subCh[order(subCh$pos), ]
-            vec <- data.frame(
-                chr = ch,
-                start = rownames(subCh)[1],
-                end = rownames(subCh)[length(subCh[, 1])],
-                startPos = subCh$pos[1],
-                endPos = subCh$pos[length(subCh[, 1])]
-            )
-            chBorder <- rbind.fill(chBorder, vec)
+            vec <-
+                data.frame(
+                    chr = ch,
+                    start = rownames(subCh)[1],
+                    end = rownames(subCh)[length(subCh[, 1])],
+                    startPos = annoSorted[which(rownames(annoSorted) 
+                                                == rownames(subCh)[1]), "pos"],
+                    endPos = annoSorted[which(rownames(annoSorted) 
+                                              == rownames(subCh)[length(subCh[, 1])]),"pos"]
+                )
+            vec
         }
+        chBorder <- do.call(rbind, out)
         rownames(chBorder) <- chBorder[, 1]
         
         ##Calculate Bin-Values
@@ -107,9 +112,11 @@ createBins <-
                 ends <- c()
                 z1 <- ceiling(fromPos / binsize)
                 z2 <- floor(toPos / binsize)
-                for (z in z1:z2) {
-                    starts <- c(starts, z * binsize)
-                    ends <- c(ends, z * binsize - 1)
+                if (z2 > z1) { 
+                    for (z in z1:z2) {
+                        starts <- c(starts, z * binsize)
+                        ends <- c(ends, z * binsize - 1)
+                    }
                 }
                 ends <- c(ends, toPos)
                 
@@ -199,3 +206,151 @@ createBins <-
 
         return(patData)
     }
+
+
+#' @title Faster binning of CN data
+#' 
+#' @export
+createBinsFast <- function(data,
+                           ctrl,
+                           ctrlAll,
+                           binsize=50000) {
+    ## use parallelization
+    no_cores <- parallel::detectCores() - 1
+    no_cores <- ifelse(no_cores == 0, 1, no_cores)
+    doParallel::registerDoParallel(no_cores)
+    
+    ##get annotation
+    anno <- getAnnoData(determineArrayType(data))
+    anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22, sep=""), "chrX", "chrY"))
+    annoSorted <- anno[order(anno$chr, anno$pos), ]
+    
+    ##Order controls and data
+    ct <- ctrl
+    ct <- ct[fastmatch::fmatch(rownames(annoSorted), names(ct))]
+    ctAll <- ctrlAll
+    ctAll <- ctAll[fastmatch::fmatch(rownames(annoSorted), 
+                                     rownames(ctAll)), ,drop=FALSE]
+    data <- data[fastmatch::fmatch(rownames(annoSorted), rownames(data)),]
+    
+    # Get cg Borders of Chromosomes
+    chrs <- paste("chr", 1:22, sep = "")
+    chBorder <- NULL
+    ch <- c()
+    out <- foreach (ch=chrs) %dopar% {
+        subCh <- data.frame(anno[which(anno$chr == ch), ])
+        subCh <- subCh[order(subCh$pos), ]
+        vec <-
+            data.frame(
+                chr = ch,
+                start = rownames(subCh)[1],
+                end = rownames(subCh)[length(subCh[, 1])],
+                startPos = annoSorted[which(rownames(annoSorted) 
+                               == rownames(subCh)[1]), "pos"],
+                endPos = annoSorted[which(rownames(annoSorted) 
+                             == rownames(subCh)[length(subCh[, 1])]),"pos"]
+            )
+        vec
+    }
+    chBorder <- do.call(rbind, out)
+    rownames(chBorder) <- chBorder[, 1]
+    
+    ##Calculate Bin-Values
+    patData <- NULL
+    for (j in 1:length(data[1, ])) {
+        #different patients
+        da <- data[, j]
+        names(da) <- rownames(data)
+        smpName <- colnames(data)[j]
+                
+        ##splitpos
+        sampleBins <- 
+            foreach::foreach(ch=levels(factor(chBorder$chr))) %dopar% {
+                cat("\r",smpName,": #", ch, "             ")
+                subCh <-
+                    data.frame(anno[which(anno$chr == ch), c("pos", "chr")])
+                subCh <- subCh[order(subCh$pos), ]
+                
+                fromPos <- chBorder[ch, "startPos"]
+                toPos <- chBorder[ch, "endPos"]
+                
+                ## find bin-borders
+                starts <- fromPos
+                ends <- c()
+                z1 <- ceiling(fromPos / binsize)
+                z2 <- floor(toPos / binsize)
+                if (z2 > z1) { 
+                    for (z in z1:z2) {
+                        starts <- c(starts, z * binsize)
+                        ends <- c(ends, z * binsize - 1)
+                    }
+                }
+                ends <- c(ends, toPos)
+                
+                ## caluclate bin values
+                startCgs <- c()
+                endCgs <- c()
+                median <- c()
+                p.val <- c()
+                ##use for fastmatch
+                namesDa <- names(da)
+                namesCt <- names(ct)
+                namesCtAll <- rownames(ctAll)
+                for (p in 1:length(starts)) {
+                    daTmp <-
+                        da[fastmatch::fmatch(
+                            rownames(subCh)[subCh$pos >= starts[p] &
+                                                subCh$pos <= ends[p]], namesDa)]
+                    ctTmp <-
+                        ct[fastmatch::fmatch(
+                            rownames(subCh)[subCh$pos >= starts[p] &
+                                                subCh$pos <= ends[p]], namesCt)]
+                    ctAllTmp <-
+                        ctAll[fastmatch::fmatch(
+                            rownames(subCh)[subCh$pos >= starts[p] &
+                                                subCh$pos <= ends[p]], namesCtAll), ]
+                    
+                    if (length(daTmp) == 0 || length(ctTmp) == 0) {
+                        next
+                    }
+                    
+                    ## get cg-IDs
+                    rnTmp <-
+                        rownames(subCh)[subCh$pos >= starts[p] & 
+                                            subCh$pos <= ends[p]]
+                    startCgs <- c(startCgs, rnTmp[1])
+                    endCgs <- c(endCgs, rnTmp[length(rnTmp)])
+                    
+                    ##difference?
+                    rat <- daTmp - ctTmp
+                    rat <- rat[!is.na(rat) & !is.infinite(rat)]
+                    
+                    median <- c(median, median(rat))
+
+                    ##statistics
+                    #u test
+                    p.val <-
+                        c(p.val,
+                          wilcox.test(daTmp, 
+                                      ctAllTmp)$p.value)
+                }
+                
+                chrDF <- data.frame(
+                    chr = ch,
+                    startCG = startCgs,
+                    #start=starts,
+                    endCG = endCgs,
+                    #end=ends,
+                    median = median,
+                    smp = smpName,
+                    p.val = p.val,
+                    statistic = "wilcoxon"
+                )
+            }
+        patData <- rbind(patData, do.call(rbind, sampleBins))
+    }
+    
+    stopImplicitCluster()
+    
+    return(patData)
+}

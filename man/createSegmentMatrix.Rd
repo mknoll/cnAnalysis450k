@@ -34,3 +34,4 @@ p.val=rep(0.00006, 4)
 )
 createSegmentMatrix(data)
 }
+

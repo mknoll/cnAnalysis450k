@@ -19,3 +19,4 @@ Returns the getAnnotation() object for 450k or EPIC data
 \examples{
 getAnnoData("EPIC")[1:3,]
 }
+

@@ -39,3 +39,4 @@ ctrl <- norm[,4] #ctrl <- apply(ctrlAll, 1, "median")
 samples <- norm[,1,drop=FALSE]
 findSegmentsFast(samples,ctrl, ctrlAll)[1:4,]
 }
+

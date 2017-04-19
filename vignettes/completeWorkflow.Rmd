@@ -90,45 +90,45 @@ workflow <- "B" #B, A, C
 ## normalize samples and controls 
 ## together
 normData <- 
-minfi::getCN(minfi::preprocessIllumina(
-    dataset))
+    minfi::getCN(minfi::preprocessIllumina(
+        dataset))
 
 switch(workflow,
-A = {
-ctrlAll <- normData[,1:3]
-ctrl <- apply(ctrlAll, 1, "median")
-},
-B = {
-#with z-Transformation, illumina
-ctrlAll <- normData[,1:3]
-ctrlAll[is.infinite(ctrlAll)] <- NA
-ctrlAll <- scale(ctrlAll)
-ctrl <- apply(ctrlAll, 1, "median")
-},
-C = {
-#conumee-path, Illumina
-ctrl <- normData[,1:3]
-})
+       A = {
+           ctrlAll <- normData[,1:3]
+           ctrl <- apply(ctrlAll, 1, "median")
+           },
+       B = {
+           #with z-Transformation, illumina
+           ctrlAll <- normData[,1:3]
+           ctrlAll[is.infinite(ctrlAll)] <- NA
+           ctrlAll <- scale(ctrlAll)
+           ctrl <- apply(ctrlAll, 1, "median")
+           },
+       C = {
+           #conumee-path, Illumina
+           ctrl <- normData[,1:3]
+           })
 
 ## samples
 switch(workflow,
-A = {
-#without z-transformation
-samples <- normData[,4:6]
-},
-B = {
-#with z-transformation
-samples <- normData[,4:6]
-samples[is.infinite(samples)] <- NA
-samples <- scale(samples)
-},
-C = {
-#conumee path, Illumina
-samples <- normData[,4:6]
-},
-{
-stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")
-})
+       A = {
+           #without z-transformation
+           samples <- normData[,4:6]
+           },
+       B = {
+           #with z-transformation
+           samples <- normData[,4:6]
+           samples[is.infinite(samples)] <- NA
+           samples <- scale(samples)
+           },
+       C = {
+           #conumee path, Illumina
+           samples <- normData[,4:6]
+           },
+       {
+           stop("Invalid Workflow! Please set workflow to either 'A', 'B' or 'C'.")
+           })
 ```
 
 
@@ -143,99 +143,68 @@ candidates <- "segments" #segments, bins, transcripts, genes
 
 candidatesDATA <- NULL
 if (candidates == "segments") {
-if (workflow == "C") {
-#calculate segments with conumee
-candidatesDATA <- cnAnalysis450k::runConumee(samples, ctrl)
-} else {
-candidatesDATA <-
-cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
-}
-} else if (candidates == "bins") {
-if (workflow == "C") {
-#calculate bins with conumee
-candidatesDATA <-
-cnAnalysis450k::runConumee(samples, ctrl, what = "bins")
-} else {
-#calculate bins, binsize=50000
-### CHANGE BINSIZE HERE
-candidatesDATA <-
-cnAnalysis450k::createBins(samples[, 1:3, drop = FALSE], ctrl,
-                            ctrlAll, binsize = 500000)
-}
-} else if (candidates == "transcripts" || candidates == "genes") {
-## genenames
-genes <-
-c(
-"EGFR",
-"NF1",
-"PIK3CA",
-"PTEN",
-"ARID1B",
-"ATRX",
-"CIC",
-"SETD2",
-"TSC2",
-"KMT2D",
-"NOTCH1",
-"NOTCH2",
-"VHL",
-"TP53",
-"BRCA1",
-"BRCA2",
-"ATM",
-"APC",
-"TERT",
-"PTCH1",
-"SMO",
-"ALK",
-"MPL",
-"MDM2",
-"MDM4",
-"MYC",
-"MYCN",
-"ID2",
-"PDGFRA",
-"MET",
-"CDK4",
-"CDK6",
-"CCND2",
-"CDKN2A",
-"PTEN",
-"RB1",
-"SOX2"
-)
-egid <-
-AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db,
-genes,
-c("ENTREZID"),
-"SYMBOL")
-tx <-
-AnnotationDbi::select(
-TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene,
-egid$ENTREZID,
-columns = "TXNAME",
-keytype = "GENEID"
-)$TXNAME
-## or alternatively, give a vector of transcript names
-#tx <- c("uc003tqh.3", "uc022ado.1", "uc003qqo.3")
-## or test all transcripts (can take some time)
-tx <-
-GenomicFeatures::transcripts(
-TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)$tx_name
-
-if (workflow == "C") {
-candidatesDATA <-
-cnAnalysis450k::runConumee(samples, ctrl, what = "transcripts", tx)
-} else {
-candidatesDATA <-
-cnAnalysis450k::getTxValues(samples, ctrl, ctrlAll, tx, output = "diff")
-##alterative: be careful with this!
-#candidatesDATA <- cnAnalysis450k::getTxValuesFast(samples, ctrl, ctrlAll, tx)
-}
-} else {
-stop("Invalid candidate selection! Set to 'segments', 'genes', 
-    'transcripts', 'bins'.")
-}
+    if (workflow == "C") {
+        #calculate segments with conumee
+        candidatesDATA <- cnAnalysis450k::runConumee(samples, ctrl)
+        } else {
+            candidatesDATA <-
+                cnAnalysis450k::findSegments(samples[, , drop = FALSE], ctrl, ctrlAll)
+            }
+    } else if (candidates == "bins") {
+        if (workflow == "C") {
+            #calculate bins with conumee
+            candidatesDATA <-
+                cnAnalysis450k::runConumee(samples, ctrl, what = "bins")
+            } else {
+                #calculate bins, binsize=50000
+                ### CHANGE BINSIZE HERE
+                candidatesDATA <-
+                    cnAnalysis450k::createBins(samples[, 1:3, drop = FALSE], ctrl,
+                                               ctrlAll, binsize = 500000)
+                }
+        } else if (candidates == "transcripts" || candidates == "genes") {
+            ## genenames
+            genes <-
+                c(
+                    "EGFR", "NF1", "PIK3CA", "PTEN", "ARID1B", "ATRX",
+                    "CIC", "SETD2", "TSC2","KMT2D", "NOTCH1", "NOTCH2",
+                    "VHL", "TP53", "BRCA1", "BRCA2","ATM", "APC", "TERT",
+                    "PTCH1","SMO",  "ALK", "MPL", "MDM2", "MDM4", "MYC",
+                    "MYCN", "ID2", "PDGFRA","MET", "CDK4", "CDK6","CCND2",                
+                    "CDKN2A","PTEN","RB1", "SOX2"
+                    )
+            egid <-
+                AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db,
+                                      genes,
+                                      c("ENTREZID"),
+                                      "SYMBOL")
+            tx <-
+                AnnotationDbi::select(
+                    TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene,
+                    egid$ENTREZID,
+                    columns = "TXNAME",
+                    keytype = "GENEID"
+                    )$TXNAME
+            ## or alternatively, give a vector of transcript names
+            #tx <- c("uc003tqh.3", "uc022ado.1", "uc003qqo.3")
+            ## or test all transcripts (can take some time)
+            tx <-
+                GenomicFeatures::transcripts(
+                    TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)$tx_name
+            
+            if (workflow == "C") {
+                candidatesDATA <-
+                    cnAnalysis450k::runConumee(samples, ctrl, what = "transcripts", tx)
+                } else {
+                    candidatesDATA <-
+                        cnAnalysis450k::getTxValues(samples, ctrl, ctrlAll, tx, output = "diff")
+                    ##alteratively
+                    #candidatesDATA <- cnAnalysis450k::getTxValuesFast(samples, ctrl, ctrlAll, tx)
+                    }
+            } else {
+                stop("Invalid candidate selection! Set to 'segments', 'genes', 
+                     'transcripts', 'bins'.")
+                }
 ```
 
 
@@ -251,17 +220,18 @@ processed (e.g. mann-whitney-u test / t-test < 0.01).
 ```{r}
 candidatesMATRIX <- NULL
 if (workflow == "C") {
-candidatesMATRIX <-
-cnAnalysis450k::createConumeeMatrix(candidatesDATA)
-} else {
-if (candidates == "segments") {
-candidatesMATRIX <-
-cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.05)
-} else {
-candidatesMATRIX <-
-candidatesDATA$data[which(candidatesDATA$p.val <= 0.05), ]
-}
-}
+    candidatesMATRIX <-
+        cnAnalysis450k::createConumeeMatrix(candidatesDATA)
+    } else {
+        if (candidates == "segments") {
+            candidatesMATRIX <-
+                cnAnalysis450k::createSegmentMatrix(candidatesDATA, p.select = 0.05)
+            } else {
+                candidatesMATRIX <-
+                    candidatesDATA$data[which(candidatesDATA$p.val <= 0.05), ]
+                }
+        }
+
 pheatmap::pheatmap(candidatesMATRIX)
 ```
 
