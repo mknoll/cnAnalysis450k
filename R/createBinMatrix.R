@@ -1,8 +1,27 @@
-#' @title Create Matrix from calculated Bins
+#' @title 
+#' Create overview for all samples of calculated Bins
 #' 
+#' @description
+#' Creates a aligned matrix of all calculated bins with
+#' samples as columns and rows as ordered bins.
+#'
+#' @param data list created with createBinsFast()
+#' containing CN values and p-values for the calculated
+#' bins
+#'
+#' @param pval pvalue for which bins are filtered. 
+#' If one bin has a p-value in any of the samples,
+#' the bin is retained
+#'
+#' @return 
+#' Matrix with samples as columns and CN Bin values 
+#' as rows
+#'
 #' @import plyr
 #' 
 #' @export
+#' 
+#' @examples
 createBinMatrix <- function(data, pval) {    
     ## use parallelization
     no_cores <- parallel::detectCores() - 1

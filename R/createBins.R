@@ -39,6 +39,8 @@ createBins <-
             output = "diff",
             arrayType="auto",
             noCores=-1) {
+	stop("Currently defunct! Please use createBinsFast()")
+
         if (noCores == -1) {
             no_cores <- parallel::detectCores() - 1
             no_cores <- ifelse(no_cores == 0, 1, no_cores)
