@@ -329,7 +329,13 @@ createBinsFast <- function(data,
             
             ##statistics
             if (length(rat) > length(colnames(data))) {
-                pvals[p, ] <- apply(daTmp, 2, function(x) wilcox.test(x, ctAllTmp)$p.value)
+                pvals[p, ] <- apply(daTmp, 
+                                    2, 
+                                    function(x) 
+                                        if (length(levels(factor(x))) == 0) 
+                                            { NA } 
+                                    else { wilcox.test(x, ctAllTmp)$p.value } 
+                                    )
             } else {
                 pvals[p, ] <- NA
             }
