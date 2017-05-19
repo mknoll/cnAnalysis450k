@@ -56,6 +56,7 @@ getTxValues <-
         } else {
             anno <- getAnnoData(arrayType)
         }
+        anno <- anno[which(rownames(anno) %in% rownames(ctrlAll)),]
         
         # Get Tx position
         txsel <-
@@ -169,16 +170,16 @@ getTxValues <-
 #' names(ctrl) <- rownames(data)
 #' getTxValues(data, ctrl, ctrlAll, "uc001aih.1", arrayType="450k")
 getTxValuesFast <- function(data, ctrl, ctrlAll, tx, arrayType="auto") {
-    warning("Might be unstable!")
     no_cores <- parallel::detectCores() - 1
     no_cores <- ifelse(no_cores == 0, 1, no_cores)
     doParallel::registerDoParallel(no_cores)
     
     ##get annotation
     if (arrayType=="auto") {
-        anno <- getAnnoData(determineArrayType(data))
+        anno <- cnAnalysis450k::getAnnoData(
+            cnAnalysis450k::determineArrayType(data))
     } else {
-        anno <- getAnnoData(arrayType)
+        anno <- cnAnalysis450k::getAnnoData(arrayType)
     }
     
     # Get Tx position
@@ -192,15 +193,13 @@ getTxValuesFast <- function(data, ctrl, ctrlAll, tx, arrayType="auto") {
     txsel <- txsel[which(!is.na(txsel$CDSCHROM)),]
     txsel <- txsel[which(!duplicated(txsel$TXNAME)),]
     
-    if (length(anno[, 1]) != length(ctrl) &&
-        length(ctrl) != length(ctrlAll[, 1]) &&
+    if (length(anno[, 1]) != length(ctrl) ||
+        length(ctrl) != length(ctrlAll[, 1]) ||
         length(data[, 1] != length(ctrl))) {
-        stopImplicitCluster()
-        stop(
-            "Something went terribly wrong :(
-            Annotation & controls do not have the same dimensions!"
-        )
+        warning("Incomplete data! Annotation dimensions
+                do not match the data dimensions -> missing values!")
     }
+    anno <- anno[which(rownames(anno) %in% rownames(ctrlAll)),]
     
     i <- NULL
     outData <- foreach::foreach(i = 1:length(txsel[, 1])) %dopar% {
