@@ -59,13 +59,14 @@ createBins <-
         }
         anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22, sep=""), "chrX", "chrY"))
         annoSorted <- anno[order(anno$chr, anno$pos), ]
+	    annoSorted <- annoSorted[which(rownames(annoSorted) %in% rownames(ctrlAll)),]
         
         # Get cg Borders of Chromosomes
         chrs <- paste("chr", 1:22, sep = "")
         chBorder <- NULL
         ch <- c()
         out <- foreach (ch=chrs) %dopar% {
-            subCh <- data.frame(anno[which(anno$chr == ch), ])
+            subCh <- data.frame(annoSorted[which(annoSorted$chr == ch), ])
             subCh <- subCh[order(subCh$pos), ]
             vec <-
                 data.frame(
@@ -228,6 +229,7 @@ createBinsFast <- function(data,
         cnAnalysis450k::determineArrayType(data))
     anno$chr <- factor(anno$chr, levels=c(paste("chr", 1:22, sep=""), "chrX", "chrY"))
     annoSorted <- anno[order(anno$chr, anno$pos), ]
+    annoSorted <- annoSorted[which(rownames(annoSorted) %in% rownames(ctrlAll)),]
     
     ##Order controls and data
     ct <- ctrl
@@ -242,7 +244,7 @@ createBinsFast <- function(data,
     chBorder <- NULL
     ch <- c()
     out <- foreach (ch=chrs) %dopar% {
-        subCh <- data.frame(anno[which(anno$chr == ch), ])
+        subCh <- data.frame(annoSorted[which(annoSorted$chr == ch), ])
         subCh <- subCh[order(subCh$pos), ]
         vec <-
             data.frame(

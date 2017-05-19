@@ -57,12 +57,13 @@ findSegments <-
             anno <- cnAnalysis450k::getAnnoData(arrayType)
         }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
+        annoSorted <- annoSorted[which(rownames(annoSorted) %in% rownames(ctrlAll)),]
         
         # Get cg Borders of Chromosomes
         chrs <- paste("chr", 1:22, sep = "")
         chBorder <- NULL
         for (ch in chrs) {
-            subCh <- data.frame(anno[which(anno$chr == ch), ])
+            subCh <- data.frame(annoSorted[which(annoSorted$chr == ch), ])
             subCh <- subCh[order(subCh$pos), ]
             vec <-
                 data.frame(
@@ -328,6 +329,7 @@ findSegmentsFast <-
             anno <- cnAnalysis450k::getAnnoData(arrayType)
         }
         annoSorted <- anno[order(anno$chr, anno$pos), ]
+        annoSorted <- annoSorted[which(rownames(annoSorted) %in% rownames(ctrlAll)),]
         
         ## parallel
         no_cores <- parallel::detectCores() - 1
@@ -346,8 +348,9 @@ findSegmentsFast <-
         chBorder <- NULL
         ch <- c()
         out <- foreach (ch=chrs) %dopar% {
-            subCh <- data.frame(anno[which(anno$chr == ch), ])
+            subCh <- data.frame(annoSorted[which(annoSorted$chr == ch), ])
             subCh <- subCh[order(subCh$pos), ]
+            
             vec <-
                 data.frame(
                     chr = ch,

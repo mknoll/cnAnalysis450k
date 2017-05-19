@@ -36,6 +36,7 @@ createSegmentMatrix <- function(data, p.select = 0.05, arrayType="auto") {
         anno <- getAnnoData(arrayType)
     }
     annoSorted <- anno[order(anno$chr, anno$pos),]
+    annoSorted <- annoSorted[which(rownames(annoSorted) %in% rownames(ctrlAll)),]
     
     ##add position
     patDataPos <- data
