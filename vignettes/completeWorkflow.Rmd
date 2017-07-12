@@ -18,6 +18,18 @@ knitr::opts_chunk$set(echo = TRUE)
 This is a CN analysis workflow which shows different possible ways of 
 normalizing / anlyzing Illumina 450k methylation data.
 
+## Installation 
+
+The current version of the package can be installed using devtools
+
+```{r eval=FALSE}
+#Install devtools if not already available
+if (!is.element("devtools", installed.packages()[,1])) {
+    install.packages("devtools")
+}
+devtools::install_github("mknoll/cnAnalysis450k")
+```
+
 ## Data loading 
 
 Idat files can be loaded with read.methyarray() of minfi. This gives

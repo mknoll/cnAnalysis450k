@@ -264,6 +264,7 @@ createBinsFast <- function(data,
     
     ##Calculate bins per chromosome
     patData <- foreach::foreach(ch=levels(factor(chBorder$chr))) %dopar% {
+    #for (ch in levels(factor(chBorder$chr))) {
         cat("\r#", ch, "             ")
         subCh <- data.frame(anno[which(anno$chr == ch), c("pos", "chr")])
         subCh <- subCh[order(subCh$pos), ]
